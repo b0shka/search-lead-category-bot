@@ -1,0 +1,11 @@
+session.session
+session.session-journal
+test.session
+test.session-journal
+Logs/
+Variables/config.py
+Variables/monitoring.py
+Variables/databases.py
+Variables/__pycache__
+Requests/__pycache__
+Databases/__pycache__
