@@ -1,4 +1,5 @@
 import asyncio
+import time
 from aiogram import executor, types
 from Variables.config import *
 from Variables.text_messages import *
@@ -25,11 +26,15 @@ async def start(message: types.Message):
 		markup.add(about_tariffs)
 
 		await message.answer(start_message_1, reply_markup=markup)
+		time.sleep(5)
+
+		photo = open(PATH_TO_IMG, 'rb')
+		await bot.send_photo(message.from_user.id, photo)
+		time.sleep(5)
 
 		markup_inline = types.InlineKeyboardMarkup()
 		start_get = types.InlineKeyboardButton(text='Начать получать заказы ✅', callback_data=CATEGORY)
 		markup_inline.add(start_get)
-
 		await message.answer(start_message_2, reply_markup=markup_inline)
 
 		user = get_data_user(message)

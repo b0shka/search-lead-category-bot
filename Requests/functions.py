@@ -147,25 +147,25 @@ class FunctionsBot:
                 is_free = await self.db_sql.get_is_free(user_id)
 
                 if status_sale == 0 and is_free == 1:
-                    one_week = types.InlineKeyboardButton(text = SALE_BUTTON_TARIF_TWO, callback_data=f'sale_tariff_{COMMAND_ONE_TARIFF}')
-                    two_week = types.InlineKeyboardButton(text = SALE_BUTTON_TARIF_THREE, callback_data=f'sale_tariff_{COMMAND_TWO_TARIFF}')
-                    three_week = types.InlineKeyboardButton(text = SALE_BUTTON_TARIF_FOUR, callback_data=f'sale_tariff_{COMMAND_THREE_TARIFF}')
+                    one_tariff = types.InlineKeyboardButton(text = SALE_BUTTON_TARIF_TWO, callback_data=f'sale_tariff_{COMMAND_ONE_TARIFF}')
+                    two_tariff = types.InlineKeyboardButton(text = SALE_BUTTON_TARIF_THREE, callback_data=f'sale_tariff_{COMMAND_TWO_TARIFF}')
+                    three_tariff = types.InlineKeyboardButton(text = SALE_BUTTON_TARIF_FOUR, callback_data=f'sale_tariff_{COMMAND_THREE_TARIFF}')
 
                 elif is_free == 1:
-                    one_week = types.InlineKeyboardButton(text = BUTTON_TARIF_TWO, callback_data=f'tariff_{COMMAND_ONE_TARIFF}')
-                    two_week = types.InlineKeyboardButton(text = BUTTON_TARIF_THREE, callback_data=f'tariff_{COMMAND_TWO_TARIFF}')
-                    three_week = types.InlineKeyboardButton(text = BUTTON_TARIF_FOUR, callback_data=f'tariff_{COMMAND_THREE_TARIFF}')
+                    one_tariff = types.InlineKeyboardButton(text = BUTTON_TARIF_TWO, callback_data=f'tariff_{COMMAND_ONE_TARIFF}')
+                    two_tariff = types.InlineKeyboardButton(text = BUTTON_TARIF_THREE, callback_data=f'tariff_{COMMAND_TWO_TARIFF}')
+                    three_tariff = types.InlineKeyboardButton(text = BUTTON_TARIF_FOUR, callback_data=f'tariff_{COMMAND_THREE_TARIFF}')
 
                 else:
                     free = types.InlineKeyboardButton(text=BUTTON_TARIF_ONE, callback_data=f'tariff_{COMMAND_FREE_TARIFF}')
-                    one_week = types.InlineKeyboardButton(text = BUTTON_TARIF_TWO, callback_data=f'tariff_{COMMAND_ONE_TARIFF}')
-                    two_week = types.InlineKeyboardButton(text = BUTTON_TARIF_THREE, callback_data=f'tariff_{COMMAND_TWO_TARIFF}')
-                    three_week = types.InlineKeyboardButton(text = BUTTON_TARIF_FOUR, callback_data=f'tariff_{COMMAND_THREE_TARIFF}')
+                    one_tariff = types.InlineKeyboardButton(text = BUTTON_TARIF_TWO, callback_data=f'tariff_{COMMAND_ONE_TARIFF}')
+                    two_tariff = types.InlineKeyboardButton(text = BUTTON_TARIF_THREE, callback_data=f'tariff_{COMMAND_TWO_TARIFF}')
+                    three_tariff = types.InlineKeyboardButton(text = BUTTON_TARIF_FOUR, callback_data=f'tariff_{COMMAND_THREE_TARIFF}')
                     markup_inline.add(free)
 
-                markup_inline.add(one_week)
-                markup_inline.add(two_week)
-                markup_inline.add(three_week)
+                markup_inline.add(one_tariff)
+                markup_inline.add(two_tariff)
+                markup_inline.add(three_tariff)
 
                 answer_message = CHOOSING_CATEGORY.replace(REPLACE_SYMBOLS, CATEGODIES[CATEGORY])
                 await message.answer(answer_message, reply_markup=markup_inline)
@@ -225,7 +225,7 @@ class FunctionsBot:
     async def support(self, message):
         try:
             markup_inline = types.InlineKeyboardMarkup()
-            item_1 = types.InlineKeyboardButton(text='Написать в поддержку', url=LINK_MANAGER)
+            item_1 = types.InlineKeyboardButton(text='💬 Менеджер | Тех.поддержка', url=LINK_MANAGER)
 
             markup_inline.add(item_1)
 
@@ -578,7 +578,7 @@ class FunctionsBot:
                     pass
 
             await bot.send_message(user_id, f"Рассылка {len(users)} пользователям прошла успешно")
-            logger.info("Рассылка прошла успешно")
+            logger.info(f"Рассылка {len(users)} пользователям прошла успешно")
         except Exception as error:
             await bot.send_message(user_id, ERROR_SERVER_MESSAGE)
             logger.error(error)

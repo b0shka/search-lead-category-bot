@@ -64,9 +64,9 @@ class MonitoringChats:
 
             for i in words:
                 p = morph.parse(i.replace("\u200b", ""))[0]
-
+                
                 if p.normal_form in no:
-                    continue
+                    return []
 
                 elif p.normal_form in globals()[CATEGORY]:
                     categories.append(CATEGORY)
@@ -264,10 +264,10 @@ class MonitoringChats:
                         await self.func.send_proggrammer_error(count_app)
 
                 elif result_ckeck_contact_block == 1:
-                    logger.info(f"Конакт @{contact} в черном списке у пользователя {user}")
+                    logger.info(f"Конакт {contact} в черном списке у пользователя {user}")
 
                 elif count_replay != 0:
-                    logger.info(f"Пойман повтор @{contact}")
+                    logger.info(f"Пойман повтор {contact} {user}")
         except Exception as error:
             logger.error(error)
             await self.func.send_proggrammer_error(error)

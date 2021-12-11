@@ -108,7 +108,7 @@ async def callback(call: types.CallbackQuery, state:FSMContext):
             user_id = call.from_user.id
             data_callback = call.data.split("_")
             tariff = data_callback[0]
-            contact = data_callback[-1]
+            contact = call.data.replace(f"{tariff}_spam_", "")
 
             if "https://t.me/" in contact:
                 contact = contact.replace("https://t.me/", "", 1)
