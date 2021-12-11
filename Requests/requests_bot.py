@@ -18,11 +18,14 @@ class RequestsBot:
             if 'поддержка' in search:
                 await func.support(message)
 
-            elif 'информация' in search:
+            elif 'faq' in search:
                 await func.information(message)
 
             elif 'тарифы' in search:
                 await func.choosing_category(message, message.from_user.id)
+
+            elif "обучение" in search:
+                await func.study(message)
 
             else:
                 await self.func_bot.else_answer(message)

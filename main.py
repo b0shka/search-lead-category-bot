@@ -20,29 +20,21 @@ async def start(message: types.Message):
 	try:
 		markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 		support = types.KeyboardButton('💬 Поддержка')
-		information = types.KeyboardButton('📚 Информация')
-		about_tariffs = types.KeyboardButton('🗒 Тарифы')
+		information = types.KeyboardButton('📚 FAQ')
+		tariffs = types.KeyboardButton('🗒 Тарифы')
+		study = types.KeyboardButton('📖 Обучение')
+		markup.add(tariffs, study)
 		markup.add(information, support)
-		markup.add(about_tariffs)
 
 		await message.answer(start_message_1, reply_markup=markup)
-		time.sleep(5)
-
-		photo = open(PATH_TO_IMG, 'rb')
-		await bot.send_photo(message.from_user.id, photo)
-		time.sleep(5)
-
-		markup_inline = types.InlineKeyboardMarkup()
-		start_get = types.InlineKeyboardButton(text='Начать получать заказы ✅', callback_data=CATEGORY)
-		markup_inline.add(start_get)
-		await message.answer(start_message_2, reply_markup=markup_inline)
 
 		user = get_data_user(message)
 		if user != 0:
 			result_add = await db_sql.add_user(user)
 			if result_add != 1:
 				await func.send_proggrammer_error(result_add)
-			await asyncio.create_task(func.mailing_message_start(message.from_user.id))
+				
+		await asyncio.create_task(func.mailing_message_start(message.from_user.id))
 	except Exception as error:
 		logger.error(error)
 		await func.send_proggrammer_error(error)
@@ -155,6 +147,6 @@ def get_data_user(message):
 
 if __name__ == '__main__':
 	loop = asyncio.get_event_loop()
-	loop.create_task(monitoring.monitoring_channels())
-	loop.create_task(func.check_time_tariff())
+	#loop.create_task(monitoring.monitoring_channels())
+	#loop.create_task(func.check_time_tariff())
 	executor.start_polling(dp, skip_updates=True, loop=loop)

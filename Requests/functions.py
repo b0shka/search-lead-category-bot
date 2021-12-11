@@ -19,7 +19,17 @@ class FunctionsBot:
 
     async def mailing_message_start(self, user_id):
         try:
-            wait = 0
+            await asyncio.sleep(5)
+            photo = open(PATH_TO_IMG, 'rb')
+            await bot.send_photo(user_id, photo)
+            
+            await asyncio.sleep(5)
+            markup_inline = types.InlineKeyboardMarkup()
+            start_get = types.InlineKeyboardButton(text='Начать получать заказы ✅', callback_data=CATEGORY)
+            markup_inline.add(start_get)
+            await bot.send_message(user_id, start_message_2, reply_markup=markup_inline)
+            
+            wait = 10
 
             while True:
                 await asyncio.sleep(10)
@@ -244,6 +254,15 @@ class FunctionsBot:
             markup_inline.add(item_1)
 
             await message.answer(INFORMATION, reply_markup=markup_inline, parse_mode='MarkdownV2')
+        except Exception as error:
+            await message.answer(ERROR_SERVER_MESSAGE)
+            logger.error(error)
+            await self.send_proggrammer_error(error)
+
+
+    async def study(self, message):
+        try:
+            await message.answer(STUDY)
         except Exception as error:
             await message.answer(ERROR_SERVER_MESSAGE)
             logger.error(error)
