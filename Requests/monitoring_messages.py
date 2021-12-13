@@ -31,7 +31,39 @@ class MonitoringChats:
                 list_messages = list_messages.split('➖➖➖➖➖➖➖')[:-1]
                 return list_messages
 
-            if channel in LIST_GROUP and "#ищу" in message_text.lower() and "#помогу" not in message_text.lower() and "#ищуработу" not in message_text.lower():
+            if channel == "workzavr":
+                list_messages = message_text.split("\n\n")[:-1]
+                return list_messages
+
+            if channel in ["fr_works", "recruit_jobs", "workers_job"]:
+                list_messages = message_text.split("➖➖➖➖➖➖➖")[:-1]
+                return list_messages
+
+            if channel == "workspaced" and "➖➖➖➖➖➖" in message_text:
+                list_messages = message_text.split("➖➖➖➖➖➖")
+                return list_messages
+
+            if channel in ["remote_ru"] and "откликнуться:" in message_text.lower():
+                return [message_text]
+
+            if channel in ["distantsiya", "lead_get_target", "goodpeople_pro", "traficmaker_channel", "rabota_go", "vacanciesrus", "workfromhomeforfun", "digitalworkr", "seejobplus", "dnative_job"]:
+                return [message_text]
+
+            if channel == "jobosphere":
+                if "#резюме" in message_text:
+                    list_messages = message_text.split("\n—")[:-1]
+                    return list_messages
+                else:
+                    return [message_text]
+
+            if channel in ["ispolnytel"] and "#помогу" not in message_text:
+                if "➖➖➖➖➖➖" in message_text:
+                    list_messages = message_text.split("➖➖➖➖➖➖")
+                    return list_messages
+                else:
+                    return [message_text]
+
+            if (channel in LIST_GROUP or channel in ["freelance_vip"]) and "#ищу" in message_text.lower() and "#помогу" not in message_text.lower() and "#ищуработу" not in message_text.lower():
                 return [message_text]
 
             return []
@@ -304,7 +336,7 @@ class MonitoringChats:
                                 except:
                                     pass
 
-                            if channel in ["reklamodromo"]:
+                            if channel in ["reklamodromo", "fr_works", "workspaced", "recruit_jobs", "workers_job", "ispolnytel"]:
                                 try:
                                     message = message.replace("➖", "")
                                     message = message.replace("\n\n", "\n", 1)

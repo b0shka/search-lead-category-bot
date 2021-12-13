@@ -220,7 +220,20 @@ class FunctionsBot:
                     logger.error(count_app)
                     await self.func.send_proggrammer_error(count_app)
 
-                await message.answer(answer_message)
+                status_pause = await self.db_sql.get_status_pause(user_id)
+
+                if status_pause == PAUSE_SUSPEND:
+                    pause_tariff = types.InlineKeyboardButton(text="Приостановить тариф", callback_data=f'start_pause')
+                    markup_inline.add(pause_tariff)
+                    await message.answer(answer_message + PAUSE_DESC, reply_markup=markup_inline)
+
+                elif status_pause == PAUSE_LAUNCH:
+                    pause_tariff = types.InlineKeyboardButton(text="Возобновить тариф", callback_data=f'stop_pause')
+                    markup_inline.add(pause_tariff)
+                    await message.answer(answer_message + PAUSE_USING, reply_markup=markup_inline)
+
+                else:
+                    await message.answer(answer_message)
 
             else:
                 await message.answer(ERROR_SERVER_MESSAGE)
@@ -228,6 +241,40 @@ class FunctionsBot:
 
         except Exception as error:
             await message.answer(ERROR_SERVER_MESSAGE)
+            logger.error(error)
+            await self.send_proggrammer_error(error)
+
+
+    async def start_pause(self, user_id, message):
+        try:
+            result_cahnge = await self.db_sql.change_status_pause(user_id, PAUSE_LAUNCH)
+
+            if result_cahnge != 1:
+                await message.answer(ERROR_SERVER_MESSAGE)
+                logger.error(result_cahnge)
+                await self.send_proggrammer_error(result_cahnge)
+            else:
+                await message.answer(START_PAUSE)
+                logger.info(f"Поставил тариф на паузу {user_id}")
+        except Exception as error:
+            await bot.send_message(user_id, ERROR_SERVER_MESSAGE)
+            logger.error(error)
+            await self.send_proggrammer_error(error)
+
+
+    async def stop_pause(self, user_id, message):
+        try:
+            result_cahnge = await self.db_sql.change_status_pause(user_id, PAUSE_USED)
+
+            if result_cahnge != 1:
+                await message.answer(ERROR_SERVER_MESSAGE)
+                logger.error(result_cahnge)
+                await self.send_proggrammer_error(result_cahnge)
+            else:
+                await message.answer(STOP_PAUSE)
+                logger.info(f"Снял тариф с паузы {user_id}")
+        except Exception as error:
+            await bot.send_message(user_id, ERROR_SERVER_MESSAGE)
             logger.error(error)
             await self.send_proggrammer_error(error)
 
@@ -248,12 +295,7 @@ class FunctionsBot:
 
     async def information(self, message):
         try:
-            markup_inline = types.InlineKeyboardMarkup()
-            item_1 = types.InlineKeyboardButton(text='Перейти в канал', url=LINK_CHANNEL)
-
-            markup_inline.add(item_1)
-
-            await message.answer(INFORMATION, reply_markup=markup_inline, parse_mode='MarkdownV2')
+            await message.answer(INFORMATION, parse_mode='html')
         except Exception as error:
             await message.answer(ERROR_SERVER_MESSAGE)
             logger.error(error)
@@ -262,7 +304,7 @@ class FunctionsBot:
 
     async def study(self, message):
         try:
-            await message.answer(STUDY)
+            await message.answer(STUDY, disable_web_page_preview=True)
         except Exception as error:
             await message.answer(ERROR_SERVER_MESSAGE)
             logger.error(error)

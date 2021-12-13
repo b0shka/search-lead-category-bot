@@ -67,6 +67,15 @@ async def callback(call: types.CallbackQuery, state:FSMContext):
                 elif COMMAND_THREE_TARIFF in call.data:
                     await func.paid_tariff(COMMAND_THREE_TARIFF, call.message, user_id, 0)
 
+        elif "pause" in call.data:
+            await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
+            
+            if call.data == "start_pause":
+                await func.start_pause(call.from_user.id, call.message)
+
+            elif call.data == "stop_pause":
+                await func.stop_pause(call.from_user.id, call.message)
+
         elif call.data == 'statistic':
             await func.statistic(call.message)
 

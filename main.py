@@ -147,6 +147,6 @@ def get_data_user(message):
 
 if __name__ == '__main__':
 	loop = asyncio.get_event_loop()
-	#loop.create_task(monitoring.monitoring_channels())
-	#loop.create_task(func.check_time_tariff())
+	loop.create_task(monitoring.monitoring_channels())
+	loop.create_task(func.check_time_tariff())
 	executor.start_polling(dp, skip_updates=True, loop=loop)

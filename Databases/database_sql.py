@@ -3,7 +3,7 @@ from datetime import datetime
 from Variables.databases import *
 from Variables.config import logger, bot, admins
 from Variables.error_messages import *
-from Variables.text_messages import COMMAND_ONE_TARIFF, COMMAND_THREE_TARIFF, COMMAND_TWO_TARIFF, COMMAND_FREE_TARIFF, CATEGORY
+from Variables.text_messages import *
 
 
 class DatabaseSQL:
@@ -70,7 +70,9 @@ class DatabaseSQL:
 							target_time_subscribe DATETIME,
 							target_is_free INTEGER DEFAULT 0,
 							target_count INTEGER DEFAULT 1,
-							target_sale INTEGER DEFAULT 0);""")
+							target_sale INTEGER DEFAULT 0,
+							pause INTEGER DEFAULT 0,
+							time_pause DATETIME);""")
 			self.db.commit()
 			logger.info(f'Создана таблица {TABLE_USERS_TARIFF_CATEGORY} в БД')
 
@@ -399,10 +401,10 @@ class DatabaseSQL:
 
 
 	async def get_users_tariff(self):
-		"""Получение полльзователей и их тарифа в определенной категории"""
+		"""Получение пользователей и их тарифа"""
 
 		try:
-			self.sql.execute(f"SELECT user_id, {CATEGORY}_tariff FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE {CATEGORY}_tariff!='0';")
+			self.sql.execute(f"SELECT user_id, {CATEGORY}_tariff FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE {CATEGORY}_tariff!='0' AND pause!=1;")
 			tariff = self.sql.fetchall()
 
 			return tariff
@@ -1080,6 +1082,81 @@ class DatabaseSQL:
 			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
 				self.connect_db()
 				await self.get_id_users()
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def get_status_pause(self, user_id):
+		try:
+			self.sql.execute(f"SELECT pause FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
+			pause = self.sql.fetchone()
+
+			if pause != None:
+				return pause[0]
+			return 0
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.get_status_pause(user_id)
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.get_status_pause(user_id)
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def change_status_pause(self, user_id, status):
+		try:
+			if status == PAUSE_LAUNCH:
+				self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET pause={status}, time_pause='{datetime.now()}' WHERE user_id={user_id};")
+				self.db.commit()
+
+			elif status == PAUSE_USED:
+				self.sql.execute(f"SELECT {CATEGORY}_time_subscribe, time_pause FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
+				time_tariff, time_pause = self.sql.fetchone()
+				
+				time_delta = datetime.now() - time_pause
+				time_tariff += time_delta
+
+				self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET pause={status}, target_time_subscribe='{time_tariff}' WHERE user_id={user_id};")
+				self.db.commit()
+
+			return 1
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.change_status_pause(user_id, status)
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.change_status_pause(user_id, status)
 
 			else:
 				logger.error(error)
