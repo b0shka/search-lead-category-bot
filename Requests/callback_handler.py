@@ -21,6 +21,21 @@ async def answer_q(message: types.Message, state: FSMContext):
     await state.finish()
 
 
+@dp.message_handler(state=Form.spam)
+async def answer_q(message: types.Message, state: FSMContext):
+    try:
+        username = message.text
+        if "@" in username:
+            username = username.replace("@", "")
+        
+    except Exception as error:
+        logger.error(error)
+        await message.answer(ERROR_SERVER_MESSAGE)
+        await func.send_proggrammer_error(error)
+
+    await state.finish()
+
+
 @dp.message_handler(state=Form.mailing)
 async def answer_q(message: types.Message, state: FSMContext):
     try:
@@ -114,18 +129,22 @@ async def callback(call: types.CallbackQuery, state:FSMContext):
             await Form.username_tariff_category.set()
 
         elif "spam" in call.data:
-            user_id = call.from_user.id
-            data_callback = call.data.split("_")
-            tariff = data_callback[0]
-            contact = call.data.replace(f"{tariff}_spam_", "")
+            if call.data == "add_spam":
+                await bot.send_message(call.from_user.id, "Введите username")
+                await Form.spam.set()
+            else:
+                user_id = call.from_user.id
+                data_callback = call.data.split("_")
+                tariff = data_callback[0]
+                contact = call.data.replace(f"{tariff}_spam_", "")
 
-            if "https://t.me/" in contact:
-                contact = contact.replace("https://t.me/", "", 1)
-            elif "t.me/" in contact:
-                contact = contact.replace("t.me/", "", 1)
+                if "https://t.me/" in contact:
+                    contact = contact.replace("https://t.me/", "", 1)
+                elif "t.me/" in contact:
+                    contact = contact.replace("t.me/", "", 1)
 
-            contact = contact.replace("@", "", 1)
-            await func.contact_spam(user_id, contact, tariff)
+                contact = contact.replace("@", "", 1)
+                await func.contact_spam(user_id, contact, tariff)
 
     except Exception as error:
         await call.message.answer(ERROR_SERVER_MESSAGE)

@@ -500,11 +500,11 @@ class FunctionsBot:
                                     if username != 0 and username != "None":
                                         logger.info(f"Закончился бесплатный тариф @{user[0]}")
                                         for admin in admins:
-                                            await bot.send_message(admin, f"Закончился бесплатный тариф у @{username}")
+                                            await bot.send_message(admin, f"<b>Закончился бесплатный тариф у @{username}</b>", parse_mode="html")
                                     else:
                                         logger.info(f"Закончился бесплатный тариф @{user[0]}")
                                         for admin in admins:
-                                            await bot.send_message(admin, f"Закончился бесплатный тариф у {user[0]}")
+                                            await bot.send_message(admin, f"<b>Закончился бесплатный тариф у {user[0]}</b>", parse_mode="html")
 
                                     loop_.create_task(self.mailing_message_after_free(user[0]))
                                 except:
@@ -644,6 +644,23 @@ class FunctionsBot:
             await bot.send_message(user_id, ERROR_SERVER_MESSAGE)
             logger.error(error)
             await self.send_proggrammer_error(error)
+
+
+    async def add_spam(self, username, message):
+        try:
+            result_add = await self.db_sql.add_spam(username)
+
+            if result_add != 1:
+                await message.answer(ERROR_SERVER_MESSAGE)
+                logger.error(result_add)
+                await bot.send_message(PROGRAMMER_ID, result_add)
+            else:
+                await message.answer(f"Пользователь @{username} добавлен в спам")
+                logger.info(f"Пользователь @{username} добавлен в спам")
+        except Exception as error:
+            await message.answer(ERROR_SERVER_MESSAGE)
+            logger.error(error)
+            await bot.send_message(PROGRAMMER_ID, error)
 
 
     async def send_logs(self):

@@ -1040,7 +1040,42 @@ class DatabaseSQL:
 
 			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
 				self.connect_db()
-				await self.check_contact_in_black_list(contact)
+				await self.add_spam_contact(user_id, contact)
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def add_spam(self, username):
+		try:
+			self.sql.execute(f"SELECT black_list FROM {TABLE_DATA};")
+			black_list = self.sql.fetchone()[0]
+			black_list += username + ";"
+
+			self.sql.execute(f"UPDATE {TABLE_DATA} SET black_list='{black_list}';")
+			self.db.commit()
+
+			return 1
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.add_spam(username)
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.add_spam(username)
 
 			else:
 				logger.error(error)

@@ -46,7 +46,7 @@ class MonitoringChats:
             if channel in ["remote_ru"] and "откликнуться:" in message_text.lower():
                 return [message_text]
 
-            if channel in ["distantsiya", "lead_get_target", "goodpeople_pro", "traficmaker_channel", "rabota_go", "vacanciesrus", "workfromhomeforfun", "digitalworkr", "seejobplus", "dnative_job"]:
+            if channel in ["distantsiya", "lead_get_target", "goodpeople_pro", "traficmaker_channel", "rabota_go", "vacanciesrus", "workfromhomeforfun", "digitalworkr", "seejobplus", "dnative_job", "testgroupinvite", "testgroupinvite1"]:
                 return [message_text]
 
             if channel == "jobosphere":
@@ -329,7 +329,7 @@ class MonitoringChats:
                         list_messages = await self.get_messages_channel(message_text['message'], channel)
                         
                         for message in list_messages:
-                            if channel == 'rueventjob':
+                            if channel in 'rueventjob':
                                 try:
                                     message = message.replace("  ", " ")
                                     message = message.replace(". #", "")[1:]

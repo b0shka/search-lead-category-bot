@@ -93,11 +93,13 @@ async def panel(message: types.Message):
 			statistic = types.InlineKeyboardButton(text = 'Статистика', callback_data = 'statistic')
 			mailing = types.InlineKeyboardButton(text = 'Рассылка', callback_data = 'mailing')
 			add_tariff = types.InlineKeyboardButton(text = 'Добавить тариф пользователю', callback_data = 'add_tariff')
+			add_spam = types.InlineKeyboardButton(text = 'Добавить в спам', callback_data = 'add_spam')
 			logs = types.InlineKeyboardButton(text = 'Скинуть logs', callback_data = 'logs')
 
 			markup_inline.add(statistic)
 			markup_inline.add(mailing)
 			markup_inline.add(add_tariff)
+			markup_inline.add(add_spam)
 			markup_inline.add(logs)
 			await message.answer('Админ панель', reply_markup=markup_inline)
 		else:
