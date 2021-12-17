@@ -1,5 +1,4 @@
 import asyncio
-import time
 from aiogram import executor, types
 from Variables.config import *
 from Variables.text_messages import *

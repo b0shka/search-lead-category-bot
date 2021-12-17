@@ -237,6 +237,7 @@ class FunctionsBot:
 
             else:
                 await message.answer(ERROR_SERVER_MESSAGE)
+                logger.error(tariff)
                 await self.send_proggrammer_error(tariff)
 
         except Exception as error:
@@ -535,11 +536,11 @@ class FunctionsBot:
                                     if username != 0 and username != "None":
                                         logger.info(f"Закончился тариф {user[1]} @{username}")
                                         for admin in admins:
-                                            await bot.send_message(admin, f"Закончился тариф {TARIFFS[user[1]]} у @{username}")
+                                            await bot.send_message(admin, f"<b>Закончился тариф {TARIFFS[user[1]]} у @{username}</b>", parse_mode="html")
                                     else:
                                         logger.info(f"Закончился тариф {user[1]} {user[0]}")
                                         for admin in admins:
-                                            await bot.send_message(admin, f"Закончился тариф {TARIFFS[user[1]]} у {user[0]}")
+                                            await bot.send_message(admin, f"<b>Закончился тариф {TARIFFS[user[1]]} у {user[0]}</b>", parse_mode="html")
 
                                     loop_.create_task(self.mailing_message_after_payment(user[0]))
                                 except:

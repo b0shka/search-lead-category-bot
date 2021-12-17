@@ -66,11 +66,11 @@ class DatabaseSQL:
 			self.sql.execute(f"""CREATE TABLE IF NOT EXISTS `{TABLE_USERS_TARIFF_CATEGORY}` (
 							id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
 							user_id INTEGER NOT NULL,
-							target_tariff VARCHAR(255) DEFAULT 0,
-							target_time_subscribe DATETIME,
-							target_is_free INTEGER DEFAULT 0,
-							target_count INTEGER DEFAULT 1,
-							target_sale INTEGER DEFAULT 0,
+							tariff VARCHAR(255) DEFAULT 0,
+							time_subscribe DATETIME,
+							is_free INTEGER DEFAULT 0,
+							count INTEGER DEFAULT 1,
+							sale INTEGER DEFAULT 0,
 							pause INTEGER DEFAULT 0,
 							time_pause DATETIME);""")
 			self.db.commit()
@@ -184,7 +184,7 @@ class DatabaseSQL:
 			if self.sql.fetchone()[0] == 0:
 				await self.add_category_user(user_id)
 
-			self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET {CATEGORY}_tariff='{tariff}', {CATEGORY}_time_subscribe='{datetime.now()}' WHERE user_id={user_id};")
+			self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET tariff='{tariff}', time_subscribe='{datetime.now()}' WHERE user_id={user_id};")
 			self.db.commit()
 
 			return 1
@@ -219,13 +219,14 @@ class DatabaseSQL:
 
 
 	async def get_tariff(self, user_id: int):
-		"""Получения тарифа пользователя в определенной категории"""
+		"""Получения тарифа пользователя"""
 
 		try:
-			self.sql.execute(f"SELECT {CATEGORY}_tariff FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
-			tariff = self.sql.fetchone()[0]
+			self.sql.execute(f"SELECT tariff FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
+			tariff = self.sql.fetchone()
+			logger.info(tariff)
 
-			return tariff
+			return tariff[0]
 
 		except mysql.connector.Error as error:
 			if error.errno == ERROR_NOT_EXISTS_TABLE:
@@ -258,7 +259,7 @@ class DatabaseSQL:
 		"""Получение время подписки на тариф у всех пользователей в определенной категории для 'таймера'"""
 		
 		try:
-			self.sql.execute(f"SELECT user_id, {CATEGORY}_tariff, {CATEGORY}_time_subscribe FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE {CATEGORY}_tariff!='0';")
+			self.sql.execute(f"SELECT user_id, tariff, time_subscribe FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE tariff!='0';")
 			users_time = self.sql.fetchall()
 
 			return users_time
@@ -292,7 +293,7 @@ class DatabaseSQL:
 		"""Удаление тарифа из таблицы с тарифами и категориями у пользователя"""
 
 		try:
-			self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET {CATEGORY}_tariff='0' WHERE user_id={user_id};")
+			self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET tariff='0' WHERE user_id={user_id};")
 			self.db.commit()
 
 			return 1
@@ -330,7 +331,7 @@ class DatabaseSQL:
 		"""Получение статуса использования бесплатной подписки у пользователя в определенной категории"""
 
 		try:
-			self.sql.execute(f"SELECT {CATEGORY}_is_free FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
+			self.sql.execute(f"SELECT is_free FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
 			is_free = self.sql.fetchone()[0]
 
 			return is_free
@@ -366,7 +367,7 @@ class DatabaseSQL:
 		"""Изменение статуса использования бесплатной подписки в определенной категории"""
 
 		try:
-			self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET {CATEGORY}_is_free=1 WHERE user_id={user_id};")
+			self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET is_free=1 WHERE user_id={user_id};")
 			self.db.commit()
 
 			return 1
@@ -404,7 +405,7 @@ class DatabaseSQL:
 		"""Получение пользователей и их тарифа"""
 
 		try:
-			self.sql.execute(f"SELECT user_id, {CATEGORY}_tariff FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE {CATEGORY}_tariff!='0' AND pause!=1;")
+			self.sql.execute(f"SELECT user_id, tariff FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE tariff!='0' AND pause!=1;")
 			tariff = self.sql.fetchall()
 
 			return tariff
@@ -438,7 +439,7 @@ class DatabaseSQL:
 		"""Получение оставшегося времени тарифа у пользователя в определенной категории"""
 
 		try:
-			self.sql.execute(f"SELECT {CATEGORY}_time_subscribe FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
+			self.sql.execute(f"SELECT time_subscribe FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
 			time_tariff = self.sql.fetchone()[0]
 			datetime_now = datetime.now()
 			time_delta = datetime_now - time_tariff
@@ -473,7 +474,7 @@ class DatabaseSQL:
 		"""Получение номера заявки у пользователя в определенной категории"""
 
 		try:
-			self.sql.execute(f"SELECT {CATEGORY}_count FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
+			self.sql.execute(f"SELECT count FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
 			count_app = self.sql.fetchone()[0]
 			
 			return count_app
@@ -509,7 +510,7 @@ class DatabaseSQL:
 		"""Обновление номера заявки у пользователя в определенной категории"""
 
 		try:
-			self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET {CATEGORY}_count={count_app+1} WHERE user_id={user_id};")
+			self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET count={count_app+1} WHERE user_id={user_id};")
 			self.db.commit()
 			
 			return 1
@@ -547,7 +548,7 @@ class DatabaseSQL:
 		"""Получение статуса скидки у пользователя в определенной категории"""
 		
 		try:
-			self.sql.execute(f"SELECT {CATEGORY}_sale FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
+			self.sql.execute(f"SELECT sale FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
 			status_sale = self.sql.fetchone()[0]
 
 			return status_sale
@@ -585,7 +586,7 @@ class DatabaseSQL:
 		"""Изменение статуса скидки у пользователя в определенной категории"""
 
 		try:
-			self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET {CATEGORY}_sale=1 WHERE user_id={user_id};")
+			self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET sale=1 WHERE user_id={user_id};")
 			self.db.commit()
 
 			return 1
@@ -723,7 +724,7 @@ class DatabaseSQL:
 		"""Получение количества подписанных на бесплатный тариф пользователей для статистики"""
 
 		try:
-			self.sql.execute(f"SELECT COUNT(*) FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE {CATEGORY}_tariff='free';")
+			self.sql.execute(f"SELECT COUNT(*) FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE tariff='free';")
 			count_users = self.sql.fetchone()[0]
 
 			return count_users
@@ -757,7 +758,7 @@ class DatabaseSQL:
 		"""Получение количества пользователей купивших подписку для статистики"""
 
 		try:
-			self.sql.execute(f"SELECT COUNT(*) FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE {CATEGORY}_tariff IN ('{COMMAND_ONE_TARIFF}', '{COMMAND_TWO_TARIFF}', '{COMMAND_THREE_TARIFF}');")
+			self.sql.execute(f"SELECT COUNT(*) FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE tariff IN ('{COMMAND_ONE_TARIFF}', '{COMMAND_TWO_TARIFF}', '{COMMAND_THREE_TARIFF}');")
 			count_users = self.sql.fetchone()[0]
 
 			return count_users
@@ -798,7 +799,7 @@ class DatabaseSQL:
 			self.db.commit()
 
 			count_application = await self.get_count_applications()
-			if count_application > 500:
+			if count_application > 1000:
 				result_delete = await self.delete_old_applications()
 				if result_delete == 0:
 					logger.error(result_delete)
@@ -1055,7 +1056,7 @@ class DatabaseSQL:
 		try:
 			self.sql.execute(f"SELECT black_list FROM {TABLE_DATA};")
 			black_list = self.sql.fetchone()[0]
-			black_list += username + ";"
+			black_list += ";" + username
 
 			self.sql.execute(f"UPDATE {TABLE_DATA} SET black_list='{black_list}';")
 			self.db.commit()
@@ -1089,13 +1090,13 @@ class DatabaseSQL:
 	async def get_id_users(self, whom):
 		try:
 			if whom == "mailing_without":
-				self.sql.execute(f"SELECT user_id FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE {CATEGORY}_tariff='0';")
+				self.sql.execute(f"SELECT user_id FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE tariff='0';")
 
 			elif whom == "mailing_free":
-				self.sql.execute(f"SELECT user_id FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE {CATEGORY}_tariff='free';")
+				self.sql.execute(f"SELECT user_id FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE tariff='free';")
 
 			elif whom == "mailing_pay":
-				self.sql.execute(f"SELECT user_id FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE {CATEGORY}_tariff IN ('{COMMAND_ONE_TARIFF}', '{COMMAND_TWO_TARIFF}', '{COMMAND_THREE_TARIFF}');")
+				self.sql.execute(f"SELECT user_id FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE tariff IN ('{COMMAND_ONE_TARIFF}', '{COMMAND_TWO_TARIFF}', '{COMMAND_THREE_TARIFF}');")
 
 			elif whom == "mailing_all_users":
 				self.sql.execute(f"SELECT user_id FROM {TABLE_USERS};")
@@ -1167,13 +1168,13 @@ class DatabaseSQL:
 				self.db.commit()
 
 			elif status == PAUSE_USED:
-				self.sql.execute(f"SELECT {CATEGORY}_time_subscribe, time_pause FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
+				self.sql.execute(f"SELECT time_subscribe, time_pause FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
 				time_tariff, time_pause = self.sql.fetchone()
 				
 				time_delta = datetime.now() - time_pause
 				time_tariff += time_delta
 
-				self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET pause={status}, target_time_subscribe='{time_tariff}' WHERE user_id={user_id};")
+				self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET pause={status}, time_subscribe='{time_tariff}' WHERE user_id={user_id};")
 				self.db.commit()
 
 			return 1

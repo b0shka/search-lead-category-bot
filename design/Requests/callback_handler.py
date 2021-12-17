@@ -27,6 +27,8 @@ async def answer_q(message: types.Message, state: FSMContext):
         username = message.text
         if "@" in username:
             username = username.replace("@", "")
+
+        await func.add_spam(username, message)
         
     except Exception as error:
         logger.error(error)
