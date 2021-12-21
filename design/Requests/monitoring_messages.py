@@ -35,7 +35,7 @@ class MonitoringChats:
                 list_messages = message_text.split("\n\n")[:-1]
                 return list_messages
 
-            if channel in ["fr_works", "recruit_jobs", "workers_job"]:
+            if channel in ["fr_works", "workoo", "recruit_jobs", "workers_job", "time4job"]:
                 list_messages = message_text.split("➖➖➖➖➖➖➖")[:-1]
                 return list_messages
 
@@ -43,10 +43,20 @@ class MonitoringChats:
                 list_messages = message_text.split("➖➖➖➖➖➖")
                 return list_messages
 
-            if channel in ["remote_ru"] and "откликнуться:" in message_text.lower():
+            if channel in ["remote_ru", "normrabota", "dddwork"] and "откликнуться:" in message_text.lower():
                 return [message_text]
 
-            if channel in ["distantsiya", "lead_get_target", "goodpeople_pro", "traficmaker_channel", "rabota_go", "vacanciesrus", "workfromhomeforfun", "digitalworkr", "seejobplus", "dnative_job", "testgroupinvite", "testgroupinvite1"]:
+            if channel in ["vdhl_good", "naudalenkebro", "distantsiya", "nawork_it", "web_fl", "webfrl", "marketing_jobs", "devjobs", "theyseeku", "onlinevakansii", "Rabota8", "vakansii5", "dnative_job", "workplaces", "udalenka_vakansiii", "workasap", "ucan_job", "seejobplus", "udalennaja_rabota", "rabovnet", "workinstajob", "workfreelancer", "it_vac", "jobscode_infull", "jobmar", "digitalworkr", "workfromhomeforfun", "zona_f", "vacanciesrus", "pandawork_birzha", "newhr", "rabota_go", "traficmaker_channel", "distantsiya2", "motionhunter", "goodpeople_pro", "rabota_360", "digital_human", "vacansia_ru", "OnlyDGTL", "lead_get_target", "WORKER_HOME", "nomadjobs", "digitaljob_ch", "hh_vacancy_art", "workshopc"]:
+                return [message_text]
+
+            if channel in ["worklis", "Udalenka7"]:
+                message_text = "\n".join(message_text.split("\n")[:-1])
+                return [message_text]
+
+            if channel == "textodromo" and "🔥Вакансия" in message_text:
+                return [message_text]
+
+            if channel == "digital_rabota" and "💼Вакансия" in message_text:
                 return [message_text]
 
             if channel == "jobosphere":
@@ -56,14 +66,43 @@ class MonitoringChats:
                 else:
                     return [message_text]
 
-            if channel in ["ispolnytel"] and "#помогу" not in message_text:
+            if channel == "javascript_jobs_feed":
+                list_messages = message_text.split("\n—\n")[:-1]
+                return list_messages
+
+            if channel in ["Copy_Digital", "ispolnytel", "boardcopywriters"] and "#помогу" not in message_text:
                 if "➖➖➖➖➖➖" in message_text:
                     list_messages = message_text.split("➖➖➖➖➖➖")
                     return list_messages
                 else:
                     return [message_text]
 
-            if (channel in LIST_GROUP or channel in ["freelance_vip"]) and "#ищу" in message_text.lower() and "#помогу" not in message_text.lower() and "#ищуработу" not in message_text.lower():
+            if channel in ["udafrii", "Na_Domy"] and "#помогу" not in message_text:
+                return [message_text]
+
+            if channel == "freelancechoice":
+                message_text = message_text.split("\n*\*\n")[0]
+                return [message_text]
+
+            if channel == "freelance_rabota_fl":
+                message_text = message_text.split("\n\n‼️")[0]
+                return [message_text]
+
+            if channel == 'diworkru' and "💰" in message_text:
+                if message_text.count("💰") > 1:
+                    list_messages = message_text.split("\n\n")[:-1]
+                    return list_messages
+                else:
+                    return [message_text]
+
+            if channel == "tonionjob":
+                if "➖➖➖➖➖➖" in message_text:
+                    message_text = message_text.split("➖➖➖➖➖➖")[0]
+                    return [message_text]
+                else:
+                    return [message_text] 
+
+            if (channel in LIST_GROUP or channel in ["freelancce", "freelance_vip"]) and "#ищу" in message_text.lower() and "#помогу" not in message_text.lower() and "#ищуработу" not in message_text.lower():
                 return [message_text]
 
             return []
@@ -329,14 +368,21 @@ class MonitoringChats:
                         list_messages = await self.get_messages_channel(message_text['message'], channel)
                         
                         for message in list_messages:
-                            if channel in 'rueventjob':
+                            if channel == 'rueventjob':
                                 try:
                                     message = message.replace("  ", " ")
                                     message = message.replace(". #", "")[1:]
                                 except:
                                     pass
 
-                            if channel in ["reklamodromo", "fr_works", "workspaced", "recruit_jobs", "workers_job", "ispolnytel"]:
+                            if channel == 'diworkru':
+                                try:
+                                    message = message.replace("  ", " ")
+                                    message = message.replace(". ", "")[1:]
+                                except:
+                                    pass
+
+                            if channel in ["fr_works", "workspaced", "reklamodromo", "recruit_jobs", "workers_job", "Copy_Digital", "ispolnytel", "boardcopywriters"]:
                                 try:
                                     message = message.replace("➖", "")
                                     message = message.replace("\n\n", "\n", 1)

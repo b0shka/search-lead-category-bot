@@ -33,7 +33,7 @@ class FunctionsBot:
 
             while True:
                 await asyncio.sleep(10)
-                tariffs = await self.db_sql.get_tariff(user_id)
+                tariffs = self.db_sql.get_tariff(user_id)
 
                 if COMMAND_FREE_TARIFF in tariffs or COMMAND_ONE_TARIFF in tariffs or COMMAND_TWO_TARIFF in tariffs or COMMAND_THREE_TARIFF in tariffs:
                     break
@@ -41,7 +41,7 @@ class FunctionsBot:
                 wait += 10
                 if wait == TIME_SLEEP_MAILING_START_1:
                     markup_inline = types.InlineKeyboardMarkup()
-                    item_1 = types.InlineKeyboardButton(text="Активировать подписку 🎁", callback_data = 'categories')
+                    item_1 = types.InlineKeyboardButton(text="Активировать подписку 🎁", callback_data = CATEGORY)
                     markup_inline.add(item_1)
 
                     try:
@@ -52,7 +52,7 @@ class FunctionsBot:
 
                 elif wait == TIME_SLEEP_MAILING_START_2:
                     markup_inline = types.InlineKeyboardMarkup()
-                    item_1 = types.InlineKeyboardButton(text="Забрать подарок 🎁", callback_data = 'categories')
+                    item_1 = types.InlineKeyboardButton(text="Забрать подарок 🎁", callback_data = CATEGORY)
                     markup_inline.add(item_1)
 
                     try:
@@ -85,7 +85,7 @@ class FunctionsBot:
 
             while True:
                 await asyncio.sleep(216)
-                tariff = await self.db_sql.get_tariff(user_id)
+                tariff = self.db_sql.get_tariff(user_id)
 
                 if tariff in [COMMAND_ONE_TARIFF, COMMAND_TWO_TARIFF, COMMAND_THREE_TARIFF]:
                     break
@@ -114,7 +114,7 @@ class FunctionsBot:
 
             while True:
                 await asyncio.sleep(432)
-                tariff = await self.db_sql.get_tariff(user_id)
+                tariff = self.db_sql.get_tariff(user_id)
 
                 if tariff in [COMMAND_ONE_TARIFF, COMMAND_TWO_TARIFF, COMMAND_THREE_TARIFF]:
                     break
@@ -150,7 +150,10 @@ class FunctionsBot:
     async def choosing_category(self, message, user_id: int):
         try:
             markup_inline = types.InlineKeyboardMarkup()
-            tariff = await self.db_sql.get_tariff(user_id)
+            tariff = self.db_sql.get_tariff(user_id)
+            if tariff == None:
+                tariff = self.db_sql.get_tariff(user_id)
+            logger.info(tariff)
 
             if tariff == "0" or tariff == COMMAND_FREE_TARIFF:
                 status_sale = await self.db_sql.get_status_sale(user_id)
@@ -206,10 +209,13 @@ class FunctionsBot:
                                 answer_message = answer_message.replace(REPLACE_SYMBOLS, str(remainig) + " часа", 1)
                             else:
                                 answer_message = answer_message.replace(REPLACE_SYMBOLS, str(remainig) + " часов", 1)
-                        else:
+                        elif remainig == 0:
                             minutes = hours * 60
                             remainig = int((DEADLINES_TARIFFS[tariff] * 24 * 60) - minutes)
                             answer_message = answer_message.replace(REPLACE_SYMBOLS, str(remainig) + " минут", 1)
+                        else:
+                            remainig = int((DEADLINES_TARIFFS[tariff] * 24 * 60) - minutes)
+                            answer_message = answer_message.replace(REPLACE_SYMBOLS, "0 минут", 1)
                 else:
                     await self.send_proggrammer_error("Сколько осталось времени в тарифе")
 
@@ -314,7 +320,9 @@ class FunctionsBot:
 
     async def free_tariff(self, message, user_id: int):
         try:
-            tariff = await self.db_sql.get_tariff(user_id)
+            tariff = self.db_sql.get_tariff(user_id)
+            if tariff == None:
+                tariff = self.db_sql.get_tariff(user_id)
 
             if tariff == "0":
                 is_free = await self.db_sql.get_is_free(user_id)
@@ -323,8 +331,7 @@ class FunctionsBot:
                     result_add = await self.db_sql.add_tariff(user_id, COMMAND_FREE_TARIFF)
 
                     if result_add == 1:
-                        answer_message = FREE_TARIFF.replace(REPLACE_SYMBOLS, str(FREE_TERM), 1)
-                        await message.answer(answer_message)
+                        await message.answer(FREE_TARIFF)
 
                         logger.info(f"Подключил тариф {COMMAND_FREE_TARIFF} {user_id}")
                         try:
@@ -357,9 +364,12 @@ class FunctionsBot:
                 answer_message = ALREADY_USING_FREE
 
                 if remainig_time != -1:
+                    days = remainig_time.days
                     hours = remainig_time.seconds / 3600
                     remainig = int(FREE_TERM - hours)
                     
+                    if days > 0:
+                        answer_message = answer_message.replace(REPLACE_SYMBOLS, "0 минут", 1)
                     if remainig > 0:
                         if remainig == 1:
                             answer_message = answer_message.replace(REPLACE_SYMBOLS, str(remainig) + " час", 1)
@@ -461,12 +471,24 @@ class FunctionsBot:
             await self.send_proggrammer_error(error)
 
 
+    async def check_size_log(self):
+        try:
+            size_log = os.path.getsize(PATH_TO_LOGS) / 1024
+
+            if size_log >= 1000:
+                await self.send_logs()
+        except Exception as error:
+            logger.error(error)
+            await self.send_proggrammer_error(error)
+
+
     async def check_time_tariff(self):
         try:
             loop_ = asyncio.get_event_loop()
 
             while True:
                 await asyncio.sleep(TIME_SLEEP_CHECK_TARIFFS)
+                await self.check_size_log()
                 datetime_now = datetime.now()
 
                 users_time = await self.db_sql.get_time_tariff_users()
@@ -476,7 +498,9 @@ class FunctionsBot:
                         time_delta = datetime_now - user[2]
 
                         if user[1] == COMMAND_FREE_TARIFF:
-                            hours = time_delta.seconds / 3600
+                            days = time_delta.days
+                            hours = time_delta.seconds / 3600 + days * 24
+                            logger.info(f"{hours} {days} {user[0]}")
 
                             if hours >= FREE_TERM:
                                 await self.db_sql.stop_tariff(user[0])

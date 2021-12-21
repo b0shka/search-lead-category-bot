@@ -218,21 +218,22 @@ class DatabaseSQL:
 			return error
 
 
-	async def get_tariff(self, user_id: int):
+	def get_tariff(self, user_id: int):
 		"""Получения тарифа пользователя"""
 
 		try:
 			self.sql.execute(f"SELECT tariff FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
 			tariff = self.sql.fetchone()
-			logger.info(tariff)
 
-			return tariff[0]
+			if tariff != None:
+				return tariff[0]
+			return tariff
 
 		except mysql.connector.Error as error:
 			if error.errno == ERROR_NOT_EXISTS_TABLE:
 				result_create = self.create_tables()
 				if result_create == 1:
-					result_add = await self.add_category_user(user_id)
+					result_add = self.add_category_user(user_id)
 					if result_add == 1:
 						return "0"
 					return result_add
@@ -244,7 +245,7 @@ class DatabaseSQL:
 
 			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
 				self.connect_db()
-				await self.get_tariff(user_id)
+				self.get_tariff(user_id)
 
 			else:
 				logger.error(error)
