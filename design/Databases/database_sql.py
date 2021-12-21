@@ -59,7 +59,8 @@ class DatabaseSQL:
 							first_name VARCHAR(50) NOT NULL,
 							last_name VARCHAR(100),
 							time DATETIME DEFAULT CURRENT_TIMESTAMP,
-							black_list TEXT);""")
+							black_list TEXT,
+							show_contact INTEGER DEFAULT 0);""")
 			self.db.commit()
 			logger.info(f'Создана таблица {TABLE_USERS} в БД')
 
@@ -793,8 +794,10 @@ class DatabaseSQL:
 			if "https://t.me/" in contact:
 				contact = contact.replace("https://t.me/", "", 1)
 
-			self.sql.execute(f"INSERT INTO {TABLE_APPLICATIONS} (user_id, channel_id, contact, category, text_application) VALUES ({user_id}, {channel_id}, '{contact}', '{CATEGORY}', '{message}');")
+			self.sql.execute(f"INSERT INTO {TABLE_APPLICATIONS} (user_id, channel_id, contact, category, text_application) VALUES ({user_id}, {channel_id}, '{contact}', '{CATEGORY}', '{message}');SELECT LAST_INSERT_ID();")
+			id_app = self.sql.fetchone()[0]
 			self.db.commit()
+			print(id_app)
 
 			count_application = await self.get_count_applications()
 			if count_application > 1000:
@@ -802,7 +805,7 @@ class DatabaseSQL:
 				if result_delete == 0:
 					logger.error(result_delete)
 
-			return 1
+			return id_app
 		except mysql.connector.Error as error:
 			if error.errno == ERROR_NOT_EXISTS_TABLE:
 				result_create = self.create_tables()
@@ -818,6 +821,39 @@ class DatabaseSQL:
 			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
 				self.connect_db()
 				await self.add_application(user_id, channel_id, contact, message)
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def get_contact_application_by_id(self, id):
+		try:
+			self.sql.execute(f"SELECT contact FROM {TABLE_APPLICATIONS} WHERE id={id};")
+			contact = self.sql.fetchone()
+
+			if contact != None:
+				return contact[0]
+			return contact
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.get_contact_application_by_id(id)
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.get_contact_application_by_id(id)
 
 			else:
 				logger.error(error)
@@ -1191,6 +1227,72 @@ class DatabaseSQL:
 			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
 				self.connect_db()
 				await self.change_status_pause(user_id, status)
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def get_show_contact(self, user_id):
+		try:
+			self.sql.execute(f"SELECT show_contact FROM {TABLE_USERS} WHERE user_id={user_id};")
+			show_contact = self.sql.fetchone()
+
+			if show_contact != None:
+				return show_contact[0]
+			return show_contact
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.get_show_contact(user_id)
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.get_show_contact(user_id)
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def update_show_contact(self, user_id):
+		try:
+			show_contact = await self.get_show_contact(user_id)
+			if show_contact != None:
+				self.sql.execute(f"UPDATE {TABLE_USERS} SET show_contact={show_contact+1} WHERE user_id={user_id};")
+				self.db.commit()
+			
+			return 1
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.update_show_contact(user_id)
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.update_show_contact(user_id)
 
 			else:
 				logger.error(error)

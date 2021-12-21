@@ -265,10 +265,10 @@ class MonitoringChats:
                 count_replay = await self.db_sql.check_contact_replay(contact, user, msg)
 
                 if count_replay == 0 and not result_ckeck_contact_block:
-                    result_add = await self.db_sql.add_application(user, channel_id, contact, msg)
-                    if result_add != 1:
-                        logger.error(result_add)
-                        await self.func.send_proggrammer_error(result_add)
+                    id_application = await self.db_sql.add_application(user, channel_id, contact, msg)
+                    if id_application != 1:
+                        logger.error(id_application)
+                        await self.func.send_proggrammer_error(id_application)
 
                     answer_message = APPLICATION.replace(REPLACE_SYMBOLS_2, CATEGODIES[CATEGORY], 1)
                     count_app = await self.db_sql.get_count_application(user)
@@ -320,6 +320,12 @@ class MonitoringChats:
                                     pass
                             answer_message = answer_message.replace(REPLACE_SYMBOLS, msg, 1)
                             answer_message += APPLICATION_FREE
+
+                            show_contact = await self.db_sql.get_show_contact(user)
+                            if show_contact != None and type(show_contact) == int and type(id_application) == int:
+                                if show_contact < COUNT_SHOW_CONTACT:
+                                    get_contact = types.InlineKeyboardButton(text="Узнать контакт", callback_data=f'get_contact_{id_application}')
+                                    markup_inline.add(get_contact)
 
                             spam = types.InlineKeyboardButton(text="Отправить в спам ❌", callback_data=f'free_spam_{contact}')
                             markup_inline.add(spam)

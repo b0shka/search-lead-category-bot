@@ -209,13 +209,10 @@ class FunctionsBot:
                                 answer_message = answer_message.replace(REPLACE_SYMBOLS, str(remainig) + " часа", 1)
                             else:
                                 answer_message = answer_message.replace(REPLACE_SYMBOLS, str(remainig) + " часов", 1)
-                        elif remainig == 0:
+                        else:
                             minutes = hours * 60
                             remainig = int((DEADLINES_TARIFFS[tariff] * 24 * 60) - minutes)
                             answer_message = answer_message.replace(REPLACE_SYMBOLS, str(remainig) + " минут", 1)
-                        else:
-                            remainig = int((DEADLINES_TARIFFS[tariff] * 24 * 60) - minutes)
-                            answer_message = answer_message.replace(REPLACE_SYMBOLS, "0 минут", 1)
                 else:
                     await self.send_proggrammer_error("Сколько осталось времени в тарифе")
 
@@ -280,6 +277,24 @@ class FunctionsBot:
             else:
                 await message.answer(STOP_PAUSE)
                 logger.info(f"Снял тариф с паузы {user_id}")
+        except Exception as error:
+            await bot.send_message(user_id, ERROR_SERVER_MESSAGE)
+            logger.error(error)
+            await self.send_proggrammer_error(error)
+
+
+    async def get_contact(self, user_id, id_application):
+        try:
+            contact = await self.db_sql.get_contact_application_by_id(id_application)
+
+            if contact != None:
+                if "http" not in contact:
+                    await bot.send_message(user_id, f"Контакт - @{contact}")
+                else:
+                    await bot.send_message(user_id, f"Контакт - {contact}")
+                await self.db_sql.update_show_contact(user_id)
+            else:
+                await bot.send_message(user_id, "К сожалению не удалось получить контакт к этой заявке")
         except Exception as error:
             await bot.send_message(user_id, ERROR_SERVER_MESSAGE)
             logger.error(error)
@@ -364,12 +379,9 @@ class FunctionsBot:
                 answer_message = ALREADY_USING_FREE
 
                 if remainig_time != -1:
-                    days = remainig_time.days
                     hours = remainig_time.seconds / 3600
                     remainig = int(FREE_TERM - hours)
                     
-                    if days > 0:
-                        answer_message = answer_message.replace(REPLACE_SYMBOLS, "0 минут", 1)
                     if remainig > 0:
                         if remainig == 1:
                             answer_message = answer_message.replace(REPLACE_SYMBOLS, str(remainig) + " час", 1)
@@ -498,9 +510,7 @@ class FunctionsBot:
                         time_delta = datetime_now - user[2]
 
                         if user[1] == COMMAND_FREE_TARIFF:
-                            days = time_delta.days
-                            hours = time_delta.seconds / 3600 + days * 24
-                            logger.info(f"{hours} {days} {user[0]}")
+                            hours = time_delta.seconds / 3600
 
                             if hours >= FREE_TERM:
                                 await self.db_sql.stop_tariff(user[0])
