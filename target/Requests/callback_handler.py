@@ -93,6 +93,10 @@ async def callback(call: types.CallbackQuery, state:FSMContext):
             elif call.data == "stop_pause":
                 await func.stop_pause(call.from_user.id, call.message)
 
+        elif "get_contact" in call.data:
+            contact = call.data.replace("get_contact_", "")
+            await func.send_contact(call.from_user.id, contact)
+
         elif call.data == 'statistic':
             await func.statistic(call.message)
 

@@ -283,6 +283,34 @@ class FunctionsBot:
             await self.send_proggrammer_error(error)
 
 
+    async def send_contact(self, user_id, contact):
+        try:
+            show_contact = await self.db_sql.get_show_contact(user_id)
+
+            if show_contact != None and type(show_contact) == int:
+                if show_contact < COUNT_SHOW_CONTACT:
+                    if "http" not in contact:
+                        await bot.send_message(user_id, f"Контакт - @{contact}")
+                    else:
+                        await bot.send_message(user_id, f"Контакт - {contact}")
+
+                    await self.db_sql.update_show_contact(user_id)
+                    await bot.send_message(user_id, f"Осталось попыток: {COUNT_SHOW_CONTACT - show_contact}")
+                    
+                    logger.info(f"Узнал контакт {user_id} {contact}")
+                else:
+                    await bot.send_message(user_id, "Вы уже использовали все попытки")
+            else:
+                await bot.send_message(user_id, ERROR_SERVER_MESSAGE)
+                logger.error(show_contact)
+                await self.send_proggrammer_error(show_contact)
+                
+        except Exception as error:
+            await bot.send_message(user_id, ERROR_SERVER_MESSAGE)
+            logger.error(error)
+            await self.send_proggrammer_error(error)
+
+
     async def support(self, message):
         try:
             markup_inline = types.InlineKeyboardMarkup()

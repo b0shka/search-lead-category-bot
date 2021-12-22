@@ -51,6 +51,8 @@ PAUSE_LAUNCH = 1
 PAUSE_SUSPEND = 0
 PAUSE_USED = -1
 
+COUNT_SHOW_CONTACT = 2
+
 LINK_CHANNEL = 'https://t.me/Leadscrollinfo'
 USERNAME_CHANNEl = '@Leadscrollinfo'
 LINK_MANAGER = 'https://t.me/leadscroll'

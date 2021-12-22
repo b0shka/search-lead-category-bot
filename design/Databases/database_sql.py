@@ -99,8 +99,11 @@ class DatabaseSQL:
 
 		try:
 			self.sql.execute(f"SELECT COUNT(*) FROM {TABLE_USERS} WHERE user_id={user['user_id']};")
+			count_ = self.sql.fetchone()
+			if count_ != None:
+				count_ = count_[0]
 
-			if self.sql.fetchone()[0] == 0:
+			if count_ == 0:
 				self.sql.execute(f"INSERT INTO {TABLE_USERS} (user_id, username, first_name, last_name) VALUES ({user['user_id']}, '{user['username']}', '{user['first_name']}', '{user['last_name']}');")
 				self.db.commit()
 				
@@ -139,7 +142,7 @@ class DatabaseSQL:
 			return error
 
 
-	async def add_category_user(self, user_id: dict):
+	async def add_category_user(self, user_id: int):
 		"""Добавление записи в таблицу с тарифами и категориями"""
 
 		try:
@@ -624,8 +627,10 @@ class DatabaseSQL:
 
 		try:
 			self.sql.execute(f"SELECT user_id FROM {TABLE_USERS} WHERE username='{username}';")
-			user_id = self.sql.fetchone()[0]
+			user_id = self.sql.fetchone()
 
+			if user_id != None:
+				return user_id[0]
 			return user_id
 
 		except mysql.connector.Error as error:
@@ -794,10 +799,8 @@ class DatabaseSQL:
 			if "https://t.me/" in contact:
 				contact = contact.replace("https://t.me/", "", 1)
 
-			self.sql.execute(f"INSERT INTO {TABLE_APPLICATIONS} (user_id, channel_id, contact, category, text_application) VALUES ({user_id}, {channel_id}, '{contact}', '{CATEGORY}', '{message}');SELECT LAST_INSERT_ID();")
-			id_app = self.sql.fetchone()[0]
+			self.sql.execute(f"INSERT INTO {TABLE_APPLICATIONS} (user_id, channel_id, contact, category, text_application) VALUES ({user_id}, {channel_id}, '{contact}', '{CATEGORY}', '{message}');")
 			self.db.commit()
-			print(id_app)
 
 			count_application = await self.get_count_applications()
 			if count_application > 1000:
@@ -805,7 +808,7 @@ class DatabaseSQL:
 				if result_delete == 0:
 					logger.error(result_delete)
 
-			return id_app
+			return 1
 		except mysql.connector.Error as error:
 			if error.errno == ERROR_NOT_EXISTS_TABLE:
 				result_create = self.create_tables()
@@ -821,39 +824,6 @@ class DatabaseSQL:
 			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
 				self.connect_db()
 				await self.add_application(user_id, channel_id, contact, message)
-
-			else:
-				logger.error(error)
-				return error
-
-		except Exception as error:
-			logger.error(error)
-			return error
-
-
-	async def get_contact_application_by_id(self, id):
-		try:
-			self.sql.execute(f"SELECT contact FROM {TABLE_APPLICATIONS} WHERE id={id};")
-			contact = self.sql.fetchone()
-
-			if contact != None:
-				return contact[0]
-			return contact
-		except mysql.connector.Error as error:
-			if error.errno == ERROR_NOT_EXISTS_TABLE:
-				result_create = self.create_tables()
-				if result_create == 1:
-					await self.get_contact_application_by_id(id)
-				else:
-					return result_create
-
-			elif error.errno == ERROR_CONNECT_MYSQL:
-				logger.error(f"Connection to MYSQL: {error}")
-				return error
-
-			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
-				self.connect_db()
-				await self.get_contact_application_by_id(id)
 
 			else:
 				logger.error(error)

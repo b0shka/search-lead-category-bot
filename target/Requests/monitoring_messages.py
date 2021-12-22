@@ -321,6 +321,12 @@ class MonitoringChats:
                             answer_message = answer_message.replace(REPLACE_SYMBOLS, msg, 1)
                             answer_message += APPLICATION_FREE
 
+                            show_contact = await self.db_sql.get_show_contact(user)
+                            if show_contact != None and type(show_contact) == int:
+                                if show_contact < COUNT_SHOW_CONTACT:
+                                    get_contact = types.InlineKeyboardButton(text="Узнать контакт", callback_data=f'get_contact_{contact}')
+                                    markup_inline.add(get_contact)
+
                             spam = types.InlineKeyboardButton(text="Отправить в спам ❌", callback_data=f'free_spam_{contact}')
                             markup_inline.add(spam)
 
