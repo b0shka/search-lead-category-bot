@@ -1,7 +1,6 @@
 import mysql.connector
 from datetime import datetime
-from Variables.databases import *
-from Variables.config import logger, bot, admins
+from Variables.config import *
 from Variables.error_messages import *
 from Variables.text_messages import *
 
@@ -1020,13 +1019,17 @@ class DatabaseSQL:
 			black_list = await self.get_black_list_user(user_id)
 			if black_list == None:
 				black_list = await self.get_black_list_user(user_id)
+			logger.info(black_list)
 
-			if ";" in black_list:
-				list_black_list = black_list.split(";")
-				if contact in list_black_list:
-					return -1
+			if black_list != None:
+				if ";" in black_list:
+					list_black_list = black_list.split(";")
+					if contact in list_black_list:
+						return -1
 					
-			black_list += contact + ";"
+				black_list += contact + ";"
+			else:
+				black_list = contact + ";"
 
 			self.sql.execute(f"UPDATE {TABLE_USERS} SET black_list='{black_list}' WHERE user_id={user_id};")
 			self.db.commit()

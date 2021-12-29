@@ -3,7 +3,7 @@ import pymorphy2
 from aiogram import types
 from telethon.sync import TelegramClient, events
 from telethon.tl.functions.users import GetFullUserRequest
-from Variables.config import bot, logger
+from Variables.config import *
 from Variables.text_messages import *
 from Variables.monitoring import *
 from Databases.database_sql import DatabaseSQL
@@ -258,10 +258,15 @@ class MonitoringChats:
         try:
             contact = await self.get_clean_contact(contact)
             black_list = await self.db_sql.get_black_list_user(user_id)
+            if black_list == None:
+                black_list = await self.db_sql.get_black_list_user(user_id)
+            logger.info(black_list)
 
-            if ";" in black_list:
-                if contact in black_list.split(";"):
-                    return 1
+            if black_list != None:
+                if ";" in black_list:
+                    if contact in black_list.split(";"):
+                        return 1
+                    return 0
                 return 0
             return 0
         except Exception as error:
@@ -275,8 +280,8 @@ class MonitoringChats:
             contact = await self.get_clean_contact(contact)
 
             if contact in CHANNELS:
-                return 0
-            return 1
+                return 1
+            return 0
         except Exception as error:
             logger.error(error)
             await self.func.send_proggrammer_error(error)
