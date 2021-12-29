@@ -237,21 +237,46 @@ class MonitoringChats:
             return 0
 
 
-    async def check_contact_black_list_user(self, user_id, contact):
+    async def get_clean_contact(self, contact):
         try:
             if "https://t.me/" in contact:
                 contact = contact.replace("https://t.me/", "", 1)
             elif "t.me/" in contact:
                 contact = contact.replace("t.me/", "", 1)
 
-            contact = contact.replace("@", "", 1)
+            if "@" in contact:
+                contact = contact.replace("@", "", 1)
+
+            return contact
+        except Exception as error:
+            logger.error(error)
+            await self.func.send_proggrammer_error(error)
+            return contact
+
+
+    async def check_contact_black_list_user(self, user_id, contact):
+        try:
+            contact = await self.get_clean_contact(contact)
             black_list = await self.db_sql.get_black_list_user(user_id)
 
             if ";" in black_list:
                 if contact in black_list.split(";"):
                     return 1
-            else:
                 return 0
+            return 0
+        except Exception as error:
+            logger.error(error)
+            await self.func.send_proggrammer_error(error)
+            return 0
+
+
+    async def check_contact_channel_name(self, contact):
+        try:
+            contact = await self.get_clean_contact(contact)
+
+            if contact in CHANNELS:
+                return 0
+            return 1
         except Exception as error:
             logger.error(error)
             await self.func.send_proggrammer_error(error)
@@ -407,9 +432,10 @@ class MonitoringChats:
 
                                 if contact != "":
                                     result_check_contact = await self.check_username(client, contact)
+                                    result_check_contact_channel_name = await self.check_contact_channel_name(contact)
                                     result_ckeck_contact_block = await self.db_sql.check_contact_in_black_list(contact)
 
-                                    if result_check_contact and not result_ckeck_contact_block:
+                                    if result_check_contact and not result_ckeck_contact_block and not result_check_contact_channel_name:
                                         users_tariff = {}
 
                                         tariff = await self.db_sql.get_users_tariff()

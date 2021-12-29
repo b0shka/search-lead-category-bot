@@ -17,4 +17,4 @@ target/Variables/databases.py
 target/Variables/__pycache__
 target/Requests/__pycache__
 target/Databases/__pycache__
-
+.stfolder/

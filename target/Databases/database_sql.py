@@ -627,8 +627,10 @@ class DatabaseSQL:
 
 		try:
 			self.sql.execute(f"SELECT user_id FROM {TABLE_USERS} WHERE username='{username}';")
-			user_id = self.sql.fetchone()[0]
+			user_id = self.sql.fetchone()
 
+			if user_id != None:
+				return user_id[0]
 			return user_id
 
 		except mysql.connector.Error as error:
@@ -947,14 +949,12 @@ class DatabaseSQL:
 			black_list = self.sql.fetchone()
 
 			if black_list == None:
-				black_list = []
-			else:
-				black_list = black_list[0].split(";")
+				return 0
+			black_list = black_list[0].split(";")
 
 			if contact in black_list:
 				return 1
-			else:
-				return 0
+			return 0
 		except mysql.connector.Error as error:
 			if error.errno == ERROR_NOT_EXISTS_TABLE:
 				result_create = self.create_tables()
@@ -983,10 +983,10 @@ class DatabaseSQL:
 	async def get_black_list_user(self, user_id):
 		try:
 			self.sql.execute(f"SELECT black_list FROM {TABLE_USERS} WHERE user_id={user_id};")
-			black_list = self.sql.fetchone()[0]
+			black_list = self.sql.fetchone()
 
-			if black_list == None:
-				return ""
+			if black_list != None:
+				return black_list[0]
 
 			return black_list
 			
@@ -1004,7 +1004,7 @@ class DatabaseSQL:
 
 			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
 				self.connect_db()
-				await self.check_contact_in_black_list(user_id)
+				await self.get_black_list_user(user_id)
 
 			else:
 				logger.error(error)
@@ -1018,6 +1018,9 @@ class DatabaseSQL:
 	async def add_spam_contact(self, user_id, contact):
 		try:
 			black_list = await self.get_black_list_user(user_id)
+			if black_list == None:
+				black_list = await self.get_black_list_user(user_id)
+
 			if ";" in black_list:
 				list_black_list = black_list.split(";")
 				if contact in list_black_list:

@@ -30,7 +30,7 @@ async def start(message: types.Message):
 		user = get_data_user(message)
 		if user != 0:
 			result_add = await db_sql.add_user(user)
-			if result_add != 1:
+			if result_add != 1 and result_add != None:
 				await func.send_proggrammer_error(result_add)
 				
 		await asyncio.create_task(func.mailing_message_start(message.from_user.id))
@@ -47,7 +47,7 @@ async def category(message: types.Message):
 		user = get_data_user(message)
 		if user != 0:
 			result_add = await db_sql.add_user(user)
-			if result_add != 1:
+			if result_add != 1 and result_add != None:
 				await func.send_proggrammer_error(result_add)
 	except Exception as error:
 		logger.error(error)
@@ -62,7 +62,7 @@ async def support(message: types.Message):
 		user = get_data_user(message)
 		if user != 0:
 			result_add = await db_sql.add_user(user)
-			if result_add != 1:
+			if result_add != 1 and result_add != None:
 				await func.send_proggrammer_error(result_add)
 	except Exception as error:
 		logger.error(error)
@@ -77,7 +77,7 @@ async def information(message: types.Message):
 		user = get_data_user(message)
 		if user != 0:
 			result_add = await db_sql.add_user(user)
-			if result_add != 1:
+			if result_add != 1 and result_add != None:
 				await func.send_proggrammer_error(result_add)
 	except Exception as error:
 		logger.error(error)
@@ -107,7 +107,7 @@ async def panel(message: types.Message):
 			user = get_data_user(message)
 			if user != 0:
 				result_add = await db_sql.add_user(user)
-				if result_add != 1:
+				if result_add != 1 and result_add != None:
 					await func.send_proggrammer_error(result_add)
 	except Exception as error:
 		logger.error(error)
@@ -123,7 +123,7 @@ async def answer_message(message: types.Message):
 		user = get_data_user(message)
 		if user != 0:
 			result_add = await db_sql.add_user(user)
-			if result_add != 1:
+			if result_add != 1 and result_add != None:
 				await func.send_proggrammer_error(result_add)
 	except Exception as error:
 		logger.error(error)

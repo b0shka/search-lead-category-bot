@@ -153,7 +153,6 @@ class FunctionsBot:
             tariff = self.db_sql.get_tariff(user_id)
             if tariff == None:
                 tariff = self.db_sql.get_tariff(user_id)
-            logger.info(tariff)
 
             if tariff == "0" or tariff == COMMAND_FREE_TARIFF:
                 status_sale = await self.db_sql.get_status_sale(user_id)
@@ -518,9 +517,11 @@ class FunctionsBot:
                 if type(users_time) == list:
                     for user in users_time:
                         time_delta = datetime_now - user[2]
+                        days = time_delta.days
+                        hours = time_delta.seconds / 3600
 
                         if user[1] == COMMAND_FREE_TARIFF:
-                            hours = time_delta.seconds / 3600
+                            hours = hours + days*24
 
                             if hours >= FREE_TERM:
                                 await self.db_sql.stop_tariff(user[0])
@@ -556,9 +557,6 @@ class FunctionsBot:
                                     pass
 
                         else:
-                            days = time_delta.days
-                            hours = time_delta.seconds / 3600
-
                             if days == (DEADLINES_TARIFFS[user[1]] - 1) and int(hours) == 0:
                                 await bot.send_message(user[0], END_WARNING_PAYMENT_TARIFF)
 
