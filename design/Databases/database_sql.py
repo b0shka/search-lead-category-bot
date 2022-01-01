@@ -694,8 +694,10 @@ class DatabaseSQL:
 
 		try:
 			self.sql.execute(f"SELECT COUNT(*) FROM {TABLE_USERS};")
-			count_users = self.sql.fetchone()[0]
+			count_users = self.sql.fetchone()
 
+			if count_users != None:
+				return count_users[0]
 			return count_users
 
 		except mysql.connector.Error as error:
@@ -728,8 +730,10 @@ class DatabaseSQL:
 
 		try:
 			self.sql.execute(f"SELECT COUNT(*) FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE tariff='free';")
-			count_users = self.sql.fetchone()[0]
+			count_users = self.sql.fetchone()
 
+			if count_users != None:
+				return count_users[0]
 			return count_users
 
 		except mysql.connector.Error as error:
@@ -762,8 +766,10 @@ class DatabaseSQL:
 
 		try:
 			self.sql.execute(f"SELECT COUNT(*) FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE tariff IN ('{COMMAND_ONE_TARIFF}', '{COMMAND_TWO_TARIFF}', '{COMMAND_THREE_TARIFF}');")
-			count_users = self.sql.fetchone()[0]
+			count_users = self.sql.fetchone()
 
+			if count_users != None:
+				return count_users[0]
 			return count_users
 
 		except mysql.connector.Error as error:

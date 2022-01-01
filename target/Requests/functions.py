@@ -633,9 +633,20 @@ class FunctionsBot:
     async def statistic(self, message):
         try:
             count_users = await self.db_sql.get_count_users()
+            if count_users == None:
+                count_users = await self.db_sql.get_count_users()
+
             count_users_subscribes_free = await self.db_sql.get_count_subscribe_free_users()
+            if count_users_subscribes_free == None:
+                count_users_subscribes_free = await self.db_sql.get_count_subscribe_free_users()
+
             count_users_payment = await self.db_sql.get_count_payment_users()
-            count_unused_users = count_users - count_users_subscribes_free - count_users_payment
+            if count_users_payment == None:
+                count_users_payment = await self.db_sql.get_count_payment_users()
+
+            count_unused_users = None
+            if count_users != None and count_users_subscribes_free != None and count_users_payment != None:
+                count_unused_users = count_users - count_users_subscribes_free - count_users_payment
 
             sattistic_message = STATISTIC
 
@@ -646,26 +657,27 @@ class FunctionsBot:
                 await self.send_proggrammer_error(count_users)
 
             if type(count_users_subscribes_free) == int:
-                sattistic_message = sattistic_message.replace(REPLACE_SYMBOLS, str(count_users_subscribes_free), 1)
+                sattistic_message = sattistic_message.replace(REPLACE_SYMBOLS_1, str(count_users_subscribes_free), 1)
             else:
-                logger.error(count_users)
+                logger.error(count_users_subscribes_free)
                 await self.send_proggrammer_error(count_users)
 
             if type(count_users_payment) == int:
-                sattistic_message = sattistic_message.replace(REPLACE_SYMBOLS, str(count_users_payment), 1)
+                sattistic_message = sattistic_message.replace(REPLACE_SYMBOLS_2, str(count_users_payment), 1)
             else:
-                logger.error(count_users)
+                logger.error(count_users_payment)
                 await self.send_proggrammer_error(count_users)
 
-            if type(count_unused_users) == int:
-                 sattistic_message = sattistic_message.replace(REPLACE_SYMBOLS, str(count_unused_users), 1)
+            if count_unused_users != None:
+                sattistic_message = sattistic_message.replace(REPLACE_SYMBOLS_3, str(count_unused_users), 1)
             else:
-                logger.error(count_users)
+                logger.error(count_unused_users)
                 await self.send_proggrammer_error(count_users)
             
             await message.answer(sattistic_message, parse_mode='html')
         except Exception as error:
             await message.answer(ERROR_SERVER_MESSAGE)
+            await message.answer(TRY_AGAIN)
             logger.error(error)
             await self.send_proggrammer_error(error)
 
