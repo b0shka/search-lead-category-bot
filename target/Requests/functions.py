@@ -774,7 +774,7 @@ class FunctionsBot:
 
                 # Определение конверсии в платную подписку
                 count_users_pay = 0
-                for i in list_indicators[2:-1]:
+                for i in list_indicators[2:-2]:
                     count_users_pay += i
                 
                 if count_users_free != 0:
@@ -810,11 +810,39 @@ class FunctionsBot:
                 
                 answer_message = answer_message.replace(REPLACE_SYMBOLS, str(income), 1)
 
-            await message.answer(answer_message, parse_mode='html')
+                target_income = list_indicators[9]
+                if target_income != 0:
+                    percent = (income / target_income) * 100
+                    percent = float(f"{percent:.2f}")
+                    message_target_income = TARGET_INCOME.replace(REPLACE_SYMBOLS, str(percent), 1)
+
+                    answer_message += message_target_income
+
+            markup_inline = types.InlineKeyboardMarkup()
+            add_target = types.InlineKeyboardButton(text='Добавить/изменить цель', callback_data="add_target")
+
+            markup_inline.add(add_target)
+            await message.answer(answer_message, reply_markup=markup_inline, parse_mode='html')
 
         except Exception as error:
             await message.answer(ERROR_SERVER_MESSAGE)
             await message.answer(TRY_AGAIN)
+            logger.error(error)
+            await self.send_proggrammer_error(error)
+
+
+    async def add_new_target(self, message, new_target):
+        try:
+            result_update = await self.db_sql.update_tager_income(new_target)
+            
+            if result_update != 1:
+                await message.answer(ERROR_SERVER_MESSAGE)
+                logger.error(result_update)
+                await self.send_proggrammer_error(result_update)
+            else:
+                await message.answer("Цель успешно установлена")
+        except Exception as error:
+            await message.answer(ERROR_SERVER_MESSAGE)
             logger.error(error)
             await self.send_proggrammer_error(error)
 

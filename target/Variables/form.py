@@ -5,3 +5,4 @@ class Form(StatesGroup):
     username_tariff_category = State()
     mailing = State()
     spam = State()
+    add_target = State()

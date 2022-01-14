@@ -56,7 +56,8 @@ class DatabaseSQL:
 							buy_two_tariff_sale INTEGER DEFAULT 0,
 							buy_three_tariff INTEGER DEFAULT 0,
 							buy_three_tariff_sale INTEGER DEFAULT 0,
-       						income INTEGER DEFAULT 0);""")
+       						income INTEGER DEFAULT 0,
+							target_income INTEGER DEFAULT 0);""")
 			self.db.commit()
 			logger.info(f'Создана таблица {TABLE_DATA} в БД')
 
@@ -1294,7 +1295,7 @@ class DatabaseSQL:
 
 	async def get_indecators(self):
 		try:
-			self.sql.execute(f"SELECT free, again_pay, buy_one_tariff, buy_one_tariff_sale, buy_two_tariff, buy_two_tariff_sale, buy_three_tariff, buy_three_tariff_sale, income FROM {TABLE_DATA};")
+			self.sql.execute(f"SELECT free, again_pay, buy_one_tariff, buy_one_tariff_sale, buy_two_tariff, buy_two_tariff_sale, buy_three_tariff, buy_three_tariff_sale, income, target_income FROM {TABLE_DATA};")
 			data = self.sql.fetchall()
 
 			return data
@@ -1402,6 +1403,38 @@ class DatabaseSQL:
 			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
 				self.connect_db()
 				await self.update_indicators(indicator)
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def update_tager_income(self, new_target):
+		try:
+			self.sql.execute(f"UPDATE {TABLE_DATA} SET target_income={new_target};")
+			self.db.commit()
+
+			return 1
+
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.update_tager_income(new_target)
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.update_tager_income(new_target)
 
 			else:
 				logger.error(error)

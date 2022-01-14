@@ -52,6 +52,22 @@ async def answer_q(message: types.Message, state: FSMContext):
     await state.finish()
 
 
+@dp.message_handler(state=Form.add_target)
+async def answer_q(message: types.Message, state: FSMContext):
+    try:
+        new_target = message.text
+        if new_target.isdigit():
+            await func.add_new_target(message, new_target)
+        else:
+            await message.answer("Введите число")
+    except Exception as error:
+        logger.error(error)
+        await message.answer(ERROR_SERVER_MESSAGE)
+        await func.send_proggrammer_error(error)
+
+    await state.finish()
+
+
 @dp.callback_query_handler(lambda call: True, state="*")
 async def callback(call: types.CallbackQuery, state:FSMContext):
     try:
@@ -102,6 +118,10 @@ async def callback(call: types.CallbackQuery, state:FSMContext):
             
         elif call.data == 'indicators':
             await func.indicators(call.message)
+
+        elif call.data == 'add_target':
+            await bot.send_message(call.from_user.id, "Введите новую цель")
+            await Form.add_target.set()
 
         elif "mailing" in call.data:
             await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)

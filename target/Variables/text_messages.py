@@ -298,8 +298,9 @@ INDICATORS = f"""
 1 месяц - {REPLACE_SYMBOLS_3}
 1 месяц (со скидкой) - {REPLACE_SYMBOLS_3}
 
-<b>Всего заработано:</b> {REPLACE_SYMBOLS}₽
-"""
+<b>Всего заработано:</b> {REPLACE_SYMBOLS}₽"""
+
+TARGET_INCOME = f""" <b>({REPLACE_SYMBOLS}%)</b>"""
 
 
 CATEGORY = "target"
