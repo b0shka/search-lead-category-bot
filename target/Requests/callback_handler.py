@@ -13,8 +13,8 @@ func = FunctionsBot()
 @dp.message_handler(state=Form.username_tariff_category)
 async def answer_q(message: types.Message, state: FSMContext):
     try:
-        username, tariff = message.text.lower().split("|")
-        await func.add_tariff_user_panel(username, tariff)
+        username, tariff, sale = message.text.lower().split("|")
+        await func.add_tariff_user_panel(username, tariff, sale)
     except ValueError:
         await message.answer("Вы неправильно ввели данные")
 
@@ -99,6 +99,9 @@ async def callback(call: types.CallbackQuery, state:FSMContext):
 
         elif call.data == 'statistic':
             await func.statistic(call.message)
+            
+        elif call.data == 'indicators':
+            await func.indicators(call.message)
 
         elif "mailing" in call.data:
             await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
@@ -131,7 +134,7 @@ async def callback(call: types.CallbackQuery, state:FSMContext):
                 await bot.send_message(user_id, "Для вас эта функция ограничена")
 
         elif call.data == "add_tariff":
-            await bot.send_message(call.from_user.id, "Введите команду типа: username|tariff")
+            await bot.send_message(call.from_user.id, "Введите команду типа: username|tariff|sale")
             await Form.username_tariff_category.set()
 
         elif "spam" in call.data:

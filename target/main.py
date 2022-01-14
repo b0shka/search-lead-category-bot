@@ -90,12 +90,13 @@ async def panel(message: types.Message):
 		if message.from_user.id in admins:
 			markup_inline = types.InlineKeyboardMarkup()
 			statistic = types.InlineKeyboardButton(text = 'Статистика', callback_data = 'statistic')
+			indicators = types.InlineKeyboardButton(text = 'Показатели', callback_data = 'indicators')
 			mailing = types.InlineKeyboardButton(text = 'Рассылка', callback_data = 'mailing')
 			add_tariff = types.InlineKeyboardButton(text = 'Добавить тариф пользователю', callback_data = 'add_tariff')
 			add_spam = types.InlineKeyboardButton(text = 'Добавить в спам', callback_data = 'add_spam')
 			logs = types.InlineKeyboardButton(text = 'Скинуть logs', callback_data = 'logs')
 
-			markup_inline.add(statistic)
+			markup_inline.add(statistic, indicators)
 			markup_inline.add(mailing)
 			markup_inline.add(add_tariff)
 			markup_inline.add(add_spam)
@@ -148,6 +149,6 @@ def get_data_user(message):
 
 if __name__ == '__main__':
 	loop = asyncio.get_event_loop()
-	loop.create_task(monitoring.monitoring_channels())
-	loop.create_task(func.check_time_tariff())
+	#loop.create_task(monitoring.monitoring_channels())
+	#loop.create_task(func.check_time_tariff())
 	executor.start_polling(dp, skip_updates=True, loop=loop)

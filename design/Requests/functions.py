@@ -34,6 +34,8 @@ class FunctionsBot:
             while True:
                 await asyncio.sleep(10)
                 tariffs = self.db_sql.get_tariff(user_id)
+                if tariffs == None:
+                    tariffs = self.db_sql.get_tariff(user_id)
 
                 if COMMAND_FREE_TARIFF in tariffs or COMMAND_ONE_TARIFF in tariffs or COMMAND_TWO_TARIFF in tariffs or COMMAND_THREE_TARIFF in tariffs:
                     break

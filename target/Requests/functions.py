@@ -1,6 +1,8 @@
 import asyncio
+import requests
 from aiogram import types
 from random import choice, randint
+from bs4 import BeautifulSoup as BS
 from datetime import datetime
 from Variables.config import *
 from Variables.error_messages import *
@@ -34,6 +36,8 @@ class FunctionsBot:
             while True:
                 await asyncio.sleep(10)
                 tariffs = self.db_sql.get_tariff(user_id)
+                if tariffs == None:
+                    tariffs = self.db_sql.get_tariff(user_id)
 
                 if COMMAND_FREE_TARIFF in tariffs or COMMAND_ONE_TARIFF in tariffs or COMMAND_TWO_TARIFF in tariffs or COMMAND_THREE_TARIFF in tariffs:
                     break
@@ -70,7 +74,7 @@ class FunctionsBot:
         try:
             await asyncio.sleep(10)
             try:
-                await bot.send_message(user_id, FREE_TARIFF_MAILING, disable_web_page_preview=True)
+                await bot.send_message(user_id, FREE_TARIFF_MAILING)
             except:
                 logger.info(f"Пользователь {user_id} заблокировал бота")
 
@@ -335,7 +339,7 @@ class FunctionsBot:
 
     async def study(self, message):
         try:
-            await message.answer(STUDY, disable_web_page_preview=True)
+            await message.answer(STUDY)
         except Exception as error:
             await message.answer(ERROR_SERVER_MESSAGE)
             logger.error(error)
@@ -356,6 +360,11 @@ class FunctionsBot:
 
                     if result_add == 1:
                         await message.answer(FREE_TARIFF)
+
+                        result_update_indicator = await self.db_sql.update_indicators('free')
+                        if result_update_indicator != 1:
+                            logger.error(result_update_indicator)
+                            await self.send_proggrammer_error(result_update_indicator)
 
                         logger.info(f"Подключил тариф {COMMAND_FREE_TARIFF} {user_id}")
                         try:
@@ -426,15 +435,15 @@ class FunctionsBot:
 
             if status_sale == 0:
                 bill = p2p.bill(amount=PRICES[choice_tariff], lifetime=10, comment=comment)
-                item_1 = types.InlineKeyboardButton(text=BUTTON_PAYMENT_ONE, url=bill.pay_url)
-                item_2 = types.InlineKeyboardButton(text=BUTTON_PAYMENT_TWO, url=LINK_MANAGER)
-                markup_inline.add(item_1)
-                markup_inline.add(item_2)
+                pay_in_bot = types.InlineKeyboardButton(text=BUTTON_PAYMENT_ONE, url=bill.pay_url)
+                pay_manager = types.InlineKeyboardButton(text=BUTTON_PAYMENT_TWO, url=LINK_MANAGER)
+                markup_inline.add(pay_in_bot)
+                markup_inline.add(pay_manager)
                 
             elif status_sale == 1:
                 bill = p2p.bill(amount=SALE_PRICES[choice_tariff], lifetime=10, comment=comment)
-                item_1 = types.InlineKeyboardButton(text=BUTTON_PAYMENT_ONE, url=bill.pay_url)
-                markup_inline.add(item_1)                
+                pay_in_bot = types.InlineKeyboardButton(text=BUTTON_PAYMENT_ONE, url=bill.pay_url)
+                markup_inline.add(pay_in_bot)                
 
             await message.answer(PAID_TARIFF, reply_markup=markup_inline)
             await asyncio.create_task(self.check_payment(user_id, bill.bill_id, choice_tariff, status_sale))
@@ -452,9 +461,11 @@ class FunctionsBot:
                 status = p2p.check(bill_id=bill_id).status
                 
                 if status == "PAID":
-                    await self.enabling_tariff(user_id, tariff)
+                    await self.enabling_tariff(user_id, tariff, status_sale)
+
                     if status_sale == 1:
                         await self.db_sql.change_status_sale(user_id)
+                        
                     break
 
                 wait += 1
@@ -464,16 +475,56 @@ class FunctionsBot:
             logger.error(error)
 
 
-    async def enabling_tariff(self, user_id: int, tariff: str):
+    async def enabling_tariff(self, user_id: int, tariff: str, sale: int):
         try:
             await bot.send_message(user_id, ENABLING_TARIFF)
+            if sale == 0:
+                money = PRICES[tariff]
+                indicator = TARIFFS_INDICATORS[tariff]
+            else:
+                money = SALE_PRICES[tariff]
+                indicator = f"{TARIFFS_INDICATORS[tariff]}_sale"
+
+            # Добавление тарифа в БД и изменение статуса бесплатного тарифа
             result_change = await self.db_sql.change_is_free(user_id)
             result_add = await self.db_sql.add_tariff(user_id, tariff)
-                
             if result_add != 1 or result_change != 1:
                 await bot.send_message(user_id, ERROR_SERVER_MESSAGE)
                 await self.send_proggrammer_error(result_add)
                 logger.error(f'[{user_id} {tariff}]: {result_add} {result_change}')
+
+            # Обновление индикатора тарифа
+            result_update_indicator = await self.db_sql.update_indicators(indicator)
+            if result_update_indicator != 1:
+                logger.error(result_update_indicator)
+                await self.send_proggrammer_error(result_update_indicator)
+
+            # Обновление индикатора прибыли
+            result_update_income = await self.db_sql.update_income_indicator(money)
+            if result_update_income != 1:
+                logger.error(result_update_income)
+                await self.send_proggrammer_error(result_update_income)
+
+            # Получение статуса покупки тарифа ранее
+            status_pay = await self.db_sql.get_status_pay(user_id)
+            if status_pay == None:
+                status_pay = await self.db_sql.get_status_pay(user_id)
+
+            if status_pay == 0:
+                # Обновление статуса покупки
+                result_update_status_pay = await self.db_sql.update_status_pay(user_id)
+                if result_update_status_pay != 1:
+                    logger.error(result_update_status_pay)
+                    await self.send_proggrammer_error(result_update_status_pay)
+            elif status_pay == 1:
+                # Обновление индикатора повторной покупки тарифа
+                result_update_indicator = await self.db_sql.update_indicators('again_pay')
+                if result_update_indicator != 1:
+                    logger.error(result_update_indicator)
+                    await self.send_proggrammer_error(result_update_indicator)
+            else:
+                logger.error(status_pay)
+                await self.send_proggrammer_error(status_pay)
 
             try:
                 username = await self.db_sql.get_username_by_id(user_id)
@@ -488,6 +539,7 @@ class FunctionsBot:
             except:
                 pass
         except Exception as error:
+            await bot.send_message(user_id, ERROR_SERVER_MESSAGE)
             logger.error(error)
             await self.send_proggrammer_error(error)
 
@@ -618,13 +670,13 @@ class FunctionsBot:
             await self.send_proggrammer_error(error)
 
 
-    async def add_tariff_user_panel(self, username: str, tariff: str):
+    async def add_tariff_user_panel(self, username: str, tariff: str, sale: str):
         try:
             if "@" in username:
                 username = username.replace("@", "")
 
             user_id = await self.db_sql.get_user_id_username(username)
-            await self.enabling_tariff(user_id, tariff)
+            await self.enabling_tariff(user_id, tariff, int(sale))
         except Exception as error:
             logger.error(error)
             await self.send_proggrammer_error(error)
@@ -675,6 +727,91 @@ class FunctionsBot:
                 await self.send_proggrammer_error(count_users)
             
             await message.answer(sattistic_message, parse_mode='html')
+        except Exception as error:
+            await message.answer(ERROR_SERVER_MESSAGE)
+            await message.answer(TRY_AGAIN)
+            logger.error(error)
+            await self.send_proggrammer_error(error)
+
+
+    async def get_count_memers_channel(self, channel: str) -> int:
+        try:
+            url = f"https://t.me/{channel}"
+
+            response = requests.get(url)
+            html = BS(response.content, 'html.parser')
+
+            for el in html.select('.tgme_page'):
+                count_ = el.select('.tgme_page_extra')[0].text
+
+            return int(count_.split()[0])
+        except Exception as error:
+            logger.error(error)
+            await self.send_proggrammer_error(error)
+            return -1
+
+
+    async def indicators(self, message):
+        try:
+            answer_message = INDICATORS
+            main_count = 0
+
+            # Получение общего числа людей в каналах
+            for channel in CHANNELS_INVITING:
+                count_users = await self.get_count_memers_channel(channel)
+                if count_users != -1:
+                    main_count += count_users
+
+            list_indicators = await self.db_sql.get_indecators()
+            if list_indicators != None and len(list_indicators) != 0:
+                list_indicators = list_indicators[0]
+
+                # Определение конверсии в бесплатную подписку
+                count_users_free = list_indicators[0]
+                conversion_free = (count_users_free / main_count) * 100
+                conversion_free = float(f"{conversion_free:.2f}")
+                answer_message = answer_message.replace(REPLACE_SYMBOLS, f"{str(conversion_free)}%", 1)
+
+                # Определение конверсии в платную подписку
+                count_users_pay = 0
+                for i in list_indicators[2:-1]:
+                    count_users_pay += i
+                
+                if count_users_free != 0:
+                    conversion_pay = (count_users_pay / count_users_free) * 100
+                    conversion_pay = float(f"{conversion_pay:.2f}")
+                else:
+                    conversion_pay = float(count_users_pay * 100)
+                answer_message = answer_message.replace(REPLACE_SYMBOLS, f"{str(conversion_pay)}%", 1)
+
+                # Определение конверсии в повторную покупку
+                count_users_again_pay = list_indicators[1]
+                if count_users_pay != 0:
+                    conversion_again_pay = (count_users_again_pay / count_users_pay) * 100
+                    conversion_again_pay = float(f"{conversion_again_pay:.2f}")
+                else:
+                    conversion_again_pay = float(count_users_again_pay * 100)
+                answer_message = answer_message.replace(REPLACE_SYMBOLS, f"{str(conversion_again_pay)}%", 1)
+
+                # Определение ЕПЦ
+                income = list_indicators[8]
+                epc = income / main_count
+                epc = float(f"{epc:.2f}")
+                answer_message = answer_message.replace(REPLACE_SYMBOLS, f"{str(epc)}₽", 1)
+
+                # Добавление данных по приобретенным тарифам
+                answer_message = answer_message.replace(REPLACE_SYMBOLS_1, str(count_users_free), 1)
+                answer_message = answer_message.replace(REPLACE_SYMBOLS_1, str(list_indicators[2]), 1)
+                answer_message = answer_message.replace(REPLACE_SYMBOLS_1, str(list_indicators[3]), 1)
+                answer_message = answer_message.replace(REPLACE_SYMBOLS_2, str(list_indicators[4]), 1)
+                answer_message = answer_message.replace(REPLACE_SYMBOLS_2, str(list_indicators[5]), 1)
+                answer_message = answer_message.replace(REPLACE_SYMBOLS_3, str(list_indicators[6]), 1)
+                answer_message = answer_message.replace(REPLACE_SYMBOLS_3, str(list_indicators[7]), 1)
+                
+                answer_message = answer_message.replace(REPLACE_SYMBOLS, str(income), 1)
+
+            await message.answer(answer_message, parse_mode='html')
+
         except Exception as error:
             await message.answer(ERROR_SERVER_MESSAGE)
             await message.answer(TRY_AGAIN)

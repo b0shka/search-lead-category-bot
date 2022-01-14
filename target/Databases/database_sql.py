@@ -47,7 +47,16 @@ class DatabaseSQL:
 			self.sql.execute(f"""CREATE TABLE IF NOT EXISTS `{TABLE_DATA}` (
 							id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
 							admins TEXT,
-							black_list TEXT);""")
+							black_list TEXT,
+							free INTEGER DEFAULT 0,
+							again_pay INTEGER DEFAULT 0,
+							buy_one_tariff INTEGER DEFAULT 0,
+							buy_one_tariff_sale INTEGER DEFAULT 0,
+							buy_two_tariff INTEGER DEFAULT 0,
+							buy_two_tariff_sale INTEGER DEFAULT 0,
+							buy_three_tariff INTEGER DEFAULT 0,
+							buy_three_tariff_sale INTEGER DEFAULT 0,
+       						income INTEGER DEFAULT 0);""")
 			self.db.commit()
 			logger.info(f'Создана таблица {TABLE_DATA} в БД')
 
@@ -72,7 +81,8 @@ class DatabaseSQL:
 							count INTEGER DEFAULT 1,
 							sale INTEGER DEFAULT 0,
 							pause INTEGER DEFAULT 0,
-							time_pause DATETIME);""")
+							time_pause DATETIME,
+							status_pay INTEGER DEFAULT 0);""")
 			self.db.commit()
 			logger.info(f'Создана таблица {TABLE_USERS_TARIFF_CATEGORY} в БД')
 
@@ -82,7 +92,6 @@ class DatabaseSQL:
 							channel_id INTEGER NOT NULL,
 							time DATETIME DEFAULT CURRENT_TIMESTAMP,
 							contact TEXT,
-							category VARCHAR(255),
 							text_application TEXT);""")
 			self.db.commit()
 			logger.info(f'Создана таблица {TABLE_APPLICATIONS} в БД')
@@ -804,11 +813,11 @@ class DatabaseSQL:
 			if "https://t.me/" in contact:
 				contact = contact.replace("https://t.me/", "", 1)
 
-			self.sql.execute(f"INSERT INTO {TABLE_APPLICATIONS} (user_id, channel_id, contact, category, text_application) VALUES ({user_id}, {channel_id}, '{contact}', '{CATEGORY}', '{message}');")
+			self.sql.execute(f"INSERT INTO {TABLE_APPLICATIONS} (user_id, channel_id, contact, text_application) VALUES ({user_id}, {channel_id}, '{contact}', '{message}');")
 			self.db.commit()
 
 			count_application = await self.get_count_applications()
-			if count_application > 1000:
+			if count_application > 3000:
 				result_delete = await self.delete_old_applications()
 				if result_delete == 0:
 					logger.error(result_delete)
@@ -873,7 +882,7 @@ class DatabaseSQL:
 
 	async def delete_old_applications(self):
 		try:
-			self.sql.execute(f"DELETE FROM {TABLE_APPLICATIONS} ORDER BY id DESC LIMIT 250;")
+			self.sql.execute(f"DELETE FROM {TABLE_APPLICATIONS} ORDER BY id LIMIT 250;")
 			self.db.commit()
 
 			return 1
@@ -911,7 +920,7 @@ class DatabaseSQL:
 
 			contact = contact.replace("@", "", 1)
 
-			self.sql.execute(f"SELECT COUNT(*) FROM {TABLE_APPLICATIONS} WHERE user_id={user_id} AND (contact='{contact}' OR text_application='{message}') AND category='{CATEGORY}';")
+			self.sql.execute(f"SELECT COUNT(*) FROM {TABLE_APPLICATIONS} WHERE user_id={user_id} AND (contact='{contact}' OR text_application='{message}');")
 			count_replay = self.sql.fetchone()[0]
 
 			return count_replay
@@ -1273,6 +1282,192 @@ class DatabaseSQL:
 			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
 				self.connect_db()
 				await self.update_show_contact(user_id)
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def get_indecators(self):
+		try:
+			self.sql.execute(f"SELECT free, again_pay, buy_one_tariff, buy_one_tariff_sale, buy_two_tariff, buy_two_tariff_sale, buy_three_tariff, buy_three_tariff_sale, income FROM {TABLE_DATA};")
+			data = self.sql.fetchall()
+
+			return data
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.get_indecators()
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.get_indecators()
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def update_income_indicator(self, add_money):
+		try:
+			list_indicators = await self.get_indecators()
+
+			if list_indicators != None and len(list_indicators) != 0:
+				list_indicators = list_indicators[0]
+
+				self.sql.execute(f"UPDATE {TABLE_DATA} SET income={list_indicators[8] + add_money};")
+				self.db.commit()
+				return 1
+			return 0
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.update_income_indicator(add_money)
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.update_income_indicator(add_money)
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def update_indicators(self, indicator):
+		try:
+			list_indicators = await self.get_indecators()
+
+			if list_indicators != None and len(list_indicators) != 0:
+				list_indicators = list_indicators[0]
+				
+				if indicator == 'free':
+					self.sql.execute(f"UPDATE {TABLE_DATA} SET {indicator}={list_indicators[0]+1};")
+				elif indicator == 'again_pay':
+					self.sql.execute(f"UPDATE {TABLE_DATA} SET {indicator}={list_indicators[1]+1};")
+				elif indicator == 'buy_one_tariff':
+					self.sql.execute(f"UPDATE {TABLE_DATA} SET {indicator}={list_indicators[2]+1};")
+				elif indicator == 'buy_one_tariff_sale':
+					self.sql.execute(f"UPDATE {TABLE_DATA} SET {indicator}={list_indicators[3]+1};")
+				elif indicator == 'buy_two_tariff':
+					self.sql.execute(f"UPDATE {TABLE_DATA} SET {indicator}={list_indicators[4]+1};")
+				elif indicator == 'buy_two_tariff_sale':
+					self.sql.execute(f"UPDATE {TABLE_DATA} SET {indicator}={list_indicators[5]+1};")
+				elif indicator == 'buy_three_tariff':
+					self.sql.execute(f"UPDATE {TABLE_DATA} SET {indicator}={list_indicators[6]+1};")
+				elif indicator == 'buy_three_tariff_sale':
+					self.sql.execute(f"UPDATE {TABLE_DATA} SET {indicator}={list_indicators[7]+1};")
+
+				self.db.commit()
+				return 1
+			return 0
+
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.update_indicators(indicator)
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.update_indicators(indicator)
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def get_status_pay(self, user_id):
+		try:
+			self.sql.execute(f"SELECT status_pay FROM {TABLE_USERS_TARIFF_CATEGORY} WHERE user_id={user_id};")
+			status_pay = self.sql.fetchone()
+
+			if status_pay != None:
+				return status_pay[0]
+			return status_pay
+
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.get_status_pay(user_id)
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.get_status_pay(user_id)
+
+			else:
+				logger.error(error)
+				return error
+
+		except Exception as error:
+			logger.error(error)
+			return error
+
+
+	async def update_status_pay(self, user_id):
+		try:
+			self.sql.execute(f"UPDATE {TABLE_USERS_TARIFF_CATEGORY} SET status_pay=1 WHERE user_id={user_id};")
+			self.db.commit()
+
+			return 1
+
+		except mysql.connector.Error as error:
+			if error.errno == ERROR_NOT_EXISTS_TABLE:
+				result_create = self.create_tables()
+				if result_create == 1:
+					await self.update_status_pay(user_id)
+				else:
+					return result_create
+
+			elif error.errno == ERROR_CONNECT_MYSQL:
+				logger.error(f"Connection to MYSQL: {error}")
+				return error
+
+			elif error.errno == ERROR_LOST_CONNECTION_MYSQL:
+				self.connect_db()
+				await self.update_status_pay(user_id)
 
 			else:
 				logger.error(error)

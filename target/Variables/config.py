@@ -12,7 +12,10 @@ load_dotenv(dotenv_path)
 TOKEN = os.getenv("TOKEN_TEST")
 SECRET_KEY_PAYMENT = os.getenv("SECRET_KEY_PAYMENT")
 
-bot = Bot(token=TOKEN)
+bot = Bot(
+	token=TOKEN,
+	disable_web_page_preview=True
+)
 dp = Dispatcher(bot,  storage=MemoryStorage())
 p2p = QiwiP2P(auth_key=SECRET_KEY_PAYMENT)
 
@@ -23,7 +26,7 @@ PATH_TO_LOGS = f"{PATH_TO_BOT}/Logs/info.log"
 
 PROGRAMMER_ID = int(os.getenv("PROGRAMMER_ID"))
 MANAGER_ID = int(os.getenv("MANAGER_ID"))
-admins = [PROGRAMMER_ID, MANAGER_ID]
+admins = [PROGRAMMER_ID]
 
 
 API_ID = int(os.getenv("API_ID_target"))
@@ -36,7 +39,7 @@ USER_DB = os.getenv("USER_DB")
 PASSWORD_DB = os.getenv("BOTS_CATEGORY_PASSWORD")
 DATABASE = os.getenv("DATABASE")
 
-TABLE_DATA = "data"
+TABLE_DATA = "data_test"
 TABLE_USERS = 'users_target'
 TABLE_USERS_TARIFF_CATEGORY = 'users_tariff_target'
 TABLE_APPLICATIONS = "applications_target"

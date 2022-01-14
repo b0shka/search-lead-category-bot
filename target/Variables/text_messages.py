@@ -29,6 +29,12 @@ TARIFFS = {
 	COMMAND_THREE_TARIFF: TEXT_THREE_TARIFF
 }
 
+TARIFFS_INDICATORS = {
+	COMMAND_ONE_TARIFF: "buy_one_tariff",
+	COMMAND_TWO_TARIFF: "buy_two_tariff",
+	COMMAND_THREE_TARIFF: "buy_three_tariff"
+}
+
 PRICES = {
 	COMMAND_ONE_TARIFF: PRICE_ONE_TARIFF,
 	COMMAND_TWO_TARIFF: PRICE_TWO_TARIFF,
@@ -57,6 +63,7 @@ LINK_CHANNEL = 'https://t.me/Leadscrollinfo'
 USERNAME_CHANNEl = '@Leadscrollinfo'
 LINK_MANAGER = 'https://t.me/leadscroll'
 USERNAME_MANAGER = '@leadscroll'
+CHANNELS_INVITING = ['targetleadscroll', 'targetleads0', 'leadscrolltarget']
 
 BUTTON_TARIF_ONE = f"{FREE_TERM} часа free + подарок 🎁"
 BUTTON_TARIF_TWO = f"{TEXT_ONE_TARIFF} - {PRICE_ONE_TARIFF}₽ 📕"
@@ -275,6 +282,25 @@ STATISTIC = f"""
 Не активных пользователей - {REPLACE_SYMBOLS_3}
 """
 
+INDICATORS = f"""
+<b>Показатели:</b>
+Конверсия в бесплатную подписку: {REPLACE_SYMBOLS}
+Конверсия в платную подписку: {REPLACE_SYMBOLS}
+Конверсия в повторную покупку: {REPLACE_SYMBOLS}
+ЕПЦ: {REPLACE_SYMBOLS}
+
+Данные по тарифам:
+Бесплатный - {REPLACE_SYMBOLS_1}
+3 дня - {REPLACE_SYMBOLS_1}
+3 дня (со скидкой) - {REPLACE_SYMBOLS_1}
+1 неделя - {REPLACE_SYMBOLS_2}
+1 неделя (со скидкой) - {REPLACE_SYMBOLS_2}
+1 месяц - {REPLACE_SYMBOLS_3}
+1 месяц (со скидкой) - {REPLACE_SYMBOLS_3}
+
+<b>Всего заработано:</b> {REPLACE_SYMBOLS}₽
+"""
+
 
 CATEGORY = "target"
 CATEGODIES = {
@@ -289,6 +315,7 @@ no = ['дизайн', "дизайнер", 'smm', 'смм', 'копирайтин
 advertisement = [
 	"внимание, читай до конца",
 	'кypc',
+	'привет',
 	'низкие цены',
 	"внимательно почитайте", 
 	"внимательно прочитайте",
@@ -297,10 +324,8 @@ advertisement = [
 	"что входит в мою работу",
 	"меня зовут",
 	"чем я могу быть вам", 
-	"всем привет",
 	"здравствуйте",
 	'массовая рассылка',
-	"я вам помогу",
 	"супер акция",
 	"я начинающий",
 	"добрый вечер",
@@ -313,5 +338,12 @@ advertisement = [
 	'спикер',
 	"мастер-майнд",
 	"будет бесплатный",
-	"регистрируйся"
+	"регистрируйся",
+	'я помогу',
+	"вам помогу",
+	"в этом помогу",
+	"работать со мной",
+	"приведу клиентов",
+	"приведу потенциальных клиентов",
+	"настройка"
 ]
