@@ -1,6 +1,6 @@
 # search-lead-category-bot
 
-A bot for job search by targeting and design in telegram channels and chats
+A [bot](https://t.me/leadscrolltargetbot)  for job search by targeting and design in telegram channels and chats
 
 ![Python][python-version]
 
