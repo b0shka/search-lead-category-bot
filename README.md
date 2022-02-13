@@ -1,6 +1,6 @@
 # search-lead-category-bot
 
-A [bot](https://t.me/leadscrolltargetbot)  for job search by targeting and design in telegram channels and chats
+A [bot](https://t.me/leadscrolltargetbot) for job search by targeting and design in telegram channels and chats
 
 ![Python][python-version]
 
@@ -13,8 +13,8 @@ A [bot](https://t.me/leadscrolltargetbot)  for job search by targeting and desig
 
 #### Installing
 ```
-git clone https://github.com/b0shka/search-lead-category-bot.git
-cd search-lead-category-bot
+git clone https://github.com/b0shka/search_lead_category_bot.git
+cd search_lead_category_bot
 ```
 
 #### Configure
@@ -28,7 +28,7 @@ pip3 install -r requirements.txt
 
 #### Installing on Windows
 ```
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 ---
