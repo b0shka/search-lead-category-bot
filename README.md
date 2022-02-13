@@ -1,4 +1,4 @@
-# search_lead_category_bot
+# search-lead-category-bot
 
 A bot for job search by targeting and design in telegram channels and chats
 
