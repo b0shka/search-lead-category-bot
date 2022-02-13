@@ -13,8 +13,8 @@ A bot for job search by targeting and design in telegram channels and chats
 
 #### Installing
 ```
-git clone https://github.com/b0shka/search_lead_category_bot.git
-cd search_lead_category_bot
+git clone https://github.com/b0shka/search-lead-category-bot.git
+cd search-lead-category-bot
 ```
 
 #### Configure
